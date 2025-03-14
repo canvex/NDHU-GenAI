@@ -12,7 +12,7 @@ from jinja2 import TemplateNotFound
 @blueprint.route('/index')
 def index():
 
-    return render_template('home/index.html', segment='index')
+    return render_template('doc_upload.html', segment='index')
 
 
 @blueprint.route('/doc_select', methods=['GET', 'POST'])
