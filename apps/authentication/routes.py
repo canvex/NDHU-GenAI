@@ -38,7 +38,7 @@ def login():
         user = Users.query.filter_by(username=username).first()
 
         # Check the password
-        if user and verify_pass(password, user.password):
+        if user and verify_pass(password.encode('utf-8'), user.password):
 
             login_user(user)
             return redirect(url_for('authentication_blueprint.route_default'))
@@ -62,7 +62,7 @@ def register():
         username = request.form['username']
         email = request.form['email']
 
-        # Check usename exists
+        # Check username exists
         user = Users.query.filter_by(username=username).first()
         if user:
             return render_template('accounts/register.html',
@@ -81,7 +81,15 @@ def register():
         # else we can create the user
         user = Users(**request.form)
         db.session.add(user)
-        db.session.commit()
+
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return render_template('accounts/register.html',
+                                   msg='Database error: {}'.format(str(e)),
+                                   success=False,
+                                   form=create_account_form)
 
         return render_template('accounts/register.html',
                                msg='User created please <a href="/login">login</a>',
