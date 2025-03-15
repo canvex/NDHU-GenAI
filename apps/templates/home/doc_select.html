@@ -71,8 +71,10 @@
                 <!-- /.card-body -->
 
                 <div class="card-footer">
-{#                  <button type="submit" class="btn btn-primary float-right">Submit</button>#}
-                    <a href="/doc_fill.html" class="nav-link {% if 'select.fill' in segment %} active {% endif %}"></a>
+                  <a href="{{ url_for('home_blueprint.doc_fill') }}" class="btn btn-primary float-sm-right">
+                    確認
+                </a>
+
                 </div>
               </form>
             </div>

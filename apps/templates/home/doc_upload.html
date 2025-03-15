@@ -71,6 +71,7 @@
                       </div>
                       <div class="input-group-append">
                         <span class="input-group-text">Upload</span>
+                        <!-- <input type="file" class="form-control" name="image" > -->
                       </div>
                     </div>
                   </div>
@@ -82,13 +83,10 @@
                 <!-- /.card-body -->
 
                 <div class="card-footer">
-{#                  <button type="submit" class="btn btn-primary float-right" href="/doc_select.html">Submit</button>#}
-{#                    <a href="{{ url_for('blueprint.doc_select') }}" class="btn btn-primary float-right">Submit</a>#}
-{#<button type="button" class="btn btn-primary float-right" onclick="window.location.href='{{ url_for('blueprint.doc_select') }}'">#}
-{#    Submit#}
-{#</button>#}
-                <a href="/doc_select.html" class="nav-link {% if 'select.html' in segment %} active {% endif %}">
-{#                    <button type="submit" class="btn btn-primary float-right{% if 'select.html' in segment %} active {% endif %}" >Submit</button>#}
+
+                  <a href="{{ url_for('home_blueprint.doc_select') }}" class="btn btn-primary float-sm-right">
+                    確認
+                </a>
                 </div>
 
               </form>

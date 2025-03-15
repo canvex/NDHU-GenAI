@@ -221,10 +221,15 @@
             </a>
             <ul class="nav nav-treeview">
               <li class="nav-item">
-                <a href="/forms-general.html" class="nav-link {% if 'forms-general' in segment %} active {% endif %}">
+                <!-- <a href="/forms-general.html" class="nav-link {% if 'forms-general' in segment %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>General Elements</p>
-                </a>
+                </a> -->
+
+                <a href="{{ url_for('home_blueprint.doc_upload') }}" class="nav-link">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>下載</p>
+              </a>
               </li>
               <li class="nav-item">
                 <a href="/forms-advanced.html" class="nav-link {% if 'forms-advanced' in segment %} active {% endif %}">

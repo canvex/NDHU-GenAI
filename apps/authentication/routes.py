@@ -43,7 +43,7 @@ def login():
             login_user(user)
             return redirect(url_for('authentication_blueprint.route_default'))
 
-        # Something (user or pass) is not ok
+        # Something (user or pass) is not osk
         return render_template('accounts/login.html',
                                msg='Wrong user or password',
                                form=login_form)

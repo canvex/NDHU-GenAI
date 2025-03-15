@@ -103,8 +103,19 @@
                 <!-- /.card-body -->
 
                 <div class="card-footer">
-{#                  <button type="submit" class="btn btn-primary float-right">Submit</button>#}
-                    <a href="/doc_download.html" class="nav-link {% if 'doc_download.html' in segment %} active {% endif %}">
+<!-- {#                  <button type="submit" class="btn btn-primary float-right">Submit</button>#} -->
+                    <!-- <a href="/doc_download.html" class="nav-link {% if 'doc_download.html' in segment %} active {% endif %}"> -->
+                      <!-- <button type="button" class="btn btn-primary float-right" onclick="window.location.href='/doc_download.html'">
+                        確認
+                    </button> -->
+
+                    <a href="{{ url_for('home_blueprint.doc_download') }}" class="btn btn-primary float-sm-right">
+                      下載
+                  </a>
+                 
+                  
+                  
+
                 </div>
               </form>
             </div>
