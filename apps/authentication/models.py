@@ -13,18 +13,17 @@ class Users(db.Model, UserMixin):
 
     __tablename__ = 'Users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), unique=True)
-    email = db.Column(db.String(64), unique=True)
-    password = db.Column(db.LargeBinary)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # 明確指定 autoincrement
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(64), unique=True, nullable=False)
+    password = db.Column(db.LargeBinary, nullable=False)  # 確保密碼欄位不能為 NULL
 
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
             # depending on whether value is an iterable or not, we must
-            # unpack it's value (when **kwargs is request.form, some values
+            # unpack its value (when **kwargs is request.form, some values
             # will be a 1-element list)
             if hasattr(value, '__iter__') and not isinstance(value, str):
-                # the ,= unpack of a singleton fails PEP8 (travis flake8 test)
                 value = value[0]
 
             if property == 'password':

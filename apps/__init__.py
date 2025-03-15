@@ -1,57 +1,31 @@
-# -*- encoding: utf-8 -*-
-"""
-Copyright (c) 2019 - present AppSeed.us
-"""
-
+# 修改 apps/__init__.py，確保與 MySQL 相容
 import os
-
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from importlib import import_module
 
-
+# 初始化 MySQL 資料庫連線
 db = SQLAlchemy()
 login_manager = LoginManager()
-
 
 def register_extensions(app):
     db.init_app(app)
     login_manager.init_app(app)
-
 
 def register_blueprints(app):
     for module_name in ('authentication', 'home'):
         module = import_module('apps.{}.routes'.format(module_name))
         app.register_blueprint(module.blueprint)
 
-
-def configure_database(app):
-
-    @app.before_first_request
-    def initialize_database():
-        try:
-            db.create_all()
-        except Exception as e:
-
-            print('> Error: DBMS Exception: ' + str(e) )
-
-            # fallback to SQLite
-            basedir = os.path.abspath(os.path.dirname(__file__))
-            app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'db.sqlite3')
-
-            print('> Fallback to SQLite ')
-            db.create_all()
-
-    @app.teardown_request
-    def shutdown_session(exception=None):
-        db.session.remove()
-
-
-def create_app(config):
+def create_app(config_class='apps.config.Config'):
     app = Flask(__name__)
-    app.config.from_object(config)
+    app.config.from_object(config_class)
+    
     register_extensions(app)
     register_blueprints(app)
-    configure_database(app)
+    
+    with app.app_context():
+        db.create_all()  # 確保 MySQL 資料庫表格被創建
+    
     return app
