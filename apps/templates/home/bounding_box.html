@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>上傳圖片並框選欄位</title>
+    <style>
+      body {
+        display: flex;
+      }
+
+      .container {
+        flex: 2;
+        text-align: center;
+      }
+
+      .sidebar {
+        width: 300px;
+        padding: 10px;
+        border-left: 1px solid #ccc;
+      }
+
+      canvas {
+        border: 1px solid black;
+        cursor: crosshair;
+        max-width: 90%;
+        height: auto;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      li {
+        padding: 5px;
+        border-bottom: 1px solid #ccc;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <h2>上傳圖片並框選欄位</h2>
+      <input type="file" id="upload" accept="image/*" />
+      <br /><br />
+      <button onclick="exportData()">匯出 JSON</button>
+      <input
+        type="file"
+        id="importFile"
+        accept="application/json"
+        onchange="importData(event)"
+      />
+      <br /><br />
+      <canvas id="canvas"></canvas>
+      <br />
+    </div>
+    <div class="sidebar">
+      <h3>框選欄位</h3>
+      <ul id="fieldList"></ul>
+    </div>
+    <script>
+      const upload = document.getElementById("upload");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const fieldList = document.getElementById("fieldList");
+      let img = new Image();
+      let fields = [];
+      let imgScale = 1;
+      let selectedField = null;
+      let isDragging = false;
+      let isResizing = false;
+      let dragOffsetX, dragOffsetY;
+      let startX, startY;
+      let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
+      let isDrawing = false;
+
+      upload.addEventListener("change", (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+
+      img.onload = function () {
+        const maxWidth = window.innerWidth * 0.7;
+        imgScale = maxWidth / img.width;
+        canvas.width = img.width * imgScale;
+        canvas.height = img.height * imgScale;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+
+      // 當按下滑鼠時
+      canvas.addEventListener("mousedown", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / canvas.width;
+        const y = (e.clientY - rect.top) / canvas.height;
+
+        selectedField = fields.find(
+          (f) =>
+            x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+        );
+
+        if (selectedField) {
+          // 檢查是否點擊到四個角落
+          resizeCorner = getResizeCorner(x, y, selectedField);
+          if (resizeCorner) {
+            isResizing = true;
+          } else {
+            isDragging = true;
+            dragOffsetX = x - selectedField.x;
+            dragOffsetY = y - selectedField.y;
+          }
+          canvas.addEventListener("mousemove", onMouseMove);
+        } else {
+          // 開始繪製新的框選區域
+          startX = x;
+          startY = y;
+          isDrawing = true;
+        }
+      });
+
+      // 當滑鼠移動時
+      canvas.addEventListener("mousemove", (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / canvas.width;
+        const y = (e.clientY - rect.top) / canvas.height;
+
+        // 檢查是否滑鼠懸停在框選區域上
+        const hoveredField = fields.find(
+          (f) =>
+            x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+        );
+
+        if (hoveredField) {
+          canvas.style.cursor = "pointer"; // 當滑鼠懸停在框選區域上，顯示可拖曳游標
+        } else {
+          canvas.style.cursor = "crosshair"; // 否則，恢復預設游標
+        }
+
+        if (isDrawing) {
+          redrawCanvas();
+          ctx.strokeStyle = "blue";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(
+            startX * canvas.width,
+            startY * canvas.height,
+            (x - startX) * canvas.width,
+            (y - startY) * canvas.height
+          );
+        } else if (isDragging && selectedField) {
+          // 拖曳框選
+          selectedField.x = x - dragOffsetX;
+          selectedField.y = y - dragOffsetY;
+          redrawCanvas();
+        } else if (isResizing && selectedField && resizeCorner) {
+          // 根據選擇的角落來調整大小
+          switch (resizeCorner) {
+            case "topLeft":
+              // 更新左上角大小，並確保寬度和高度為正數
+              selectedField.width += selectedField.x - x;
+              selectedField.height += selectedField.y - y;
+              selectedField.x = x;
+              selectedField.y = y;
+              // 確保寬度和高度是正數
+              if (selectedField.width < 0) {
+                selectedField.x = x - selectedField.width;
+                selectedField.width;
+              }
+              if (selectedField.height < 0) {
+                selectedField.y = y + selectedField.height;
+                selectedField.height = -selectedField.height;
+              }
+              break;
+            case "topRight":
+              // 更新右上角大小
+              selectedField.width = x - selectedField.x;
+              selectedField.height += selectedField.y - y;
+              selectedField.y = y;
+              // 確保寬度和高度是正數
+              if (selectedField.width < 0) {
+                selectedField.x = x + selectedField.width;
+                selectedField.width = -selectedField.width;
+              }
+              if (selectedField.height < 0) {
+                selectedField.y = y + selectedField.height;
+                selectedField.height = -selectedField.height;
+              }
+
+              // 偵測是否有反轉，如果是，就切換為右下角
+              if (selectedField.height < 0) {
+                resizeCorner = "bottomRight";
+              }
+              break;
+            case "bottomLeft":
+              // 更新左下角大小
+              selectedField.width += selectedField.x - x;
+              selectedField.height = y - selectedField.y;
+              selectedField.x = x;
+              // 確保寬度和高度是正數
+              if (selectedField.width < 0) {
+                selectedField.x = x + selectedField.width;
+                selectedField.width = -selectedField.width;
+              }
+              if (selectedField.height < 0) {
+                selectedField.y = y + selectedField.height;
+                selectedField.height = -selectedField.height;
+              }
+              break;
+            case "bottomRight":
+              // 更新右下角大小
+              selectedField.width = x - selectedField.x;
+              selectedField.height = y - selectedField.y;
+              // 確保寬度和高度是正數
+              if (selectedField.width < 0) {
+                selectedField.x = x + selectedField.width;
+                selectedField.width = -selectedField.width;
+              }
+              if (selectedField.height < 0) {
+                selectedField.y = y + selectedField.height;
+                selectedField.height = -selectedField.height;
+              }
+              break;
+          }
+
+          // 重新繪製畫布，更新框選區域
+          redrawCanvas();
+        }
+        updateFieldList();
+      });
+
+      // 當滑鼠放開時
+      canvas.addEventListener("mouseup", (e) => {
+        if (isDrawing) {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / canvas.width;
+          const y = (e.clientY - rect.top) / canvas.height;
+
+          let fieldName = prompt("請輸入欄位名稱：");
+          if (fieldName) {
+            fields.push({
+              name: fieldName,
+              x: Math.min(startX, x),
+              y: Math.min(startY, y),
+              width: Math.abs(x - startX),
+              height: Math.abs(y - startY),
+            });
+            updateFieldList();
+          }
+          isDrawing = false;
+        }
+
+        isDragging = false;
+        isResizing = false;
+        resizeCorner = null;
+        selectedField = null;
+        canvas.removeEventListener("mousemove", onMouseMove);
+        redrawCanvas();
+      });
+
+      // 根據鼠標點擊的位置判斷是否點擊到角落
+      function getResizeCorner(x, y, field) {
+        const cornerThreshold = 10; // 邊界距離臨界值
+        const left = field.x * canvas.width;
+        const top = field.y * canvas.height;
+        const right = (field.x + field.width) * canvas.width;
+        const bottom = (field.y + field.height) * canvas.height;
+
+        if (
+          Math.abs(x * canvas.width - left) < cornerThreshold &&
+          Math.abs(y * canvas.height - top) < cornerThreshold
+        ) {
+          return "topLeft";
+        } else if (
+          Math.abs(x * canvas.width - right) < cornerThreshold &&
+          Math.abs(y * canvas.height - top) < cornerThreshold
+        ) {
+          return "topRight";
+        } else if (
+          Math.abs(x * canvas.width - left) < cornerThreshold &&
+          Math.abs(y * canvas.height - bottom) < cornerThreshold
+        ) {
+          return "bottomLeft";
+        } else if (
+          Math.abs(x * canvas.width - right) < cornerThreshold &&
+          Math.abs(y * canvas.height - bottom) < cornerThreshold
+        ) {
+          return "bottomRight";
+        }
+        return null;
+      }
+
+      function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = "red";
+        ctx.lineWidth = 2;
+        fields.forEach((f) => {
+          // 畫出框選區域
+          ctx.strokeRect(
+            f.x * canvas.width,
+            f.y * canvas.height,
+            f.width * canvas.width,
+            f.height * canvas.height
+          );
+
+          // 畫出四個角落的圓點
+          const cornerSize = 5;
+          ctx.fillStyle = "blue";
+          ctx.beginPath();
+          ctx.arc(
+            f.x * canvas.width,
+            f.y * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            (f.x + f.width) * canvas.width,
+            f.y * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            f.x * canvas.width,
+            (f.y + f.height) * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(
+            (f.x + f.width) * canvas.width,
+            (f.y + f.height) * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        });
+      }
+
+      // 更新欄位列表
+      function updateFieldList() {
+        fieldList.innerHTML = "";
+        fields.forEach((f, index) => {
+          let li = document.createElement("li");
+          li.textContent = `${f.name} (x: ${f.x.toFixed(2)}, y: ${f.y.toFixed(
+            2
+          )})`;
+          let btn = document.createElement("button");
+          btn.textContent = "刪除";
+          btn.onclick = () => {
+            fields.splice(index, 1);
+            updateFieldList();
+            redrawCanvas();
+          };
+          li.appendChild(btn);
+          fieldList.appendChild(li);
+        });
+      }
+
+      // 匯出框選資料
+      function exportData() {
+        const absoluteFields = fields.map((f) => ({
+          name: f.name,
+          x: Math.round(f.x * img.width),
+          y: Math.round(f.y * img.height),
+          width: Math.round(f.width * img.width),
+          height: Math.round(f.height * img.height),
+        }));
+
+        const dataStr =
+          "data:text/json;charset=utf-8," +
+          encodeURIComponent(JSON.stringify(absoluteFields, null, 2));
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "bounding_boxes.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      }
+
+      // 匯入框選資料
+      function importData(event) {
+        const file = event.target.files[0];
+
+        // 確保即使選擇相同的檔案也會觸發 change 事件
+        event.target.value = "";
+
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            try {
+              const importedFields = JSON.parse(e.target.result);
+
+              if (!img.complete) {
+                img.onload = () =>
+                  updateFieldsWithRelativeCoordinates(importedFields);
+              } else {
+                updateFieldsWithRelativeCoordinates(importedFields);
+              }
+            } catch (error) {
+              alert("無法解析 JSON 檔案");
+            }
+          };
+          reader.readAsText(file);
+        }
+      }
+
+      function updateFieldsWithRelativeCoordinates(importedFields) {
+        fields = importedFields.map((f) => ({
+          ...f,
+          x: f.x / img.width,
+          y: f.y / img.height,
+          width: f.width / img.width,
+          height: f.height / img.height,
+        }));
+        updateFieldList();
+        redrawCanvas();
+      }
+
+      document
+        .getElementById("importBtn")
+        .addEventListener("change", importData, false);
+      document
+        .getElementById("exportBtn")
+        .addEventListener("click", exportData, false);
+    </script>
+  </body>
+</html>
