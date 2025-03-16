@@ -1,9 +1,15 @@
 # NDHU-GenAI 東華專題
 
-### 1️⃣建立虛擬環境
+### 1️⃣建立虛擬環境(Linux/Mac)
 
 ```
 python3 -m venv venv
+```
+
+### 1️⃣建立虛擬環境(Windows)
+
+```
+python -m venv venv
 ```
 
 ### 2️⃣啟動虛擬環境(Linux/Mac)
@@ -43,3 +49,8 @@ flask run
 ```
 python run.py
 ```
+---
+### 創建 `.env` 檔案
+
+在專案的根目錄建立一個名為 `.env` 的檔案。此檔案將用來存放你的資料庫連線設定。<br>
+在 `.env` 檔案中，加入以下設定：`DATABASE_URL=mysql+pymysql://...`

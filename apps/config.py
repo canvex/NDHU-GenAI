@@ -1,4 +1,7 @@
 import os, random, string
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Config(object):
     basedir = os.path.abspath(os.path.dirname(__file__))
@@ -17,13 +20,13 @@ class Config(object):
 class DebugConfig(Config):
     DEBUG = True
     # 本地開發時使用 MySQL，請確保你的 MySQL 伺服器允許連線
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'mysql+pymysql://ndhu:2025genai@152.70.110.2/ndhu_genai')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # 從環境變數讀取
 
 
 class ProductionConfig(Config):
     DEBUG = False
     # 部署到雲端（例如 AWS RDS, GCP, Azure）時使用的 MySQL 連線
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'mysql+pymysql://ndhu:2025genai@152.70.110.2/ndhu_genai')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')  # 從環境變數讀取
 
 # 設定對應的 config_dict
 config_dict = {
