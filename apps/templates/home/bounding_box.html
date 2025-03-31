@@ -1,10 +1,47 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-TW">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>上傳圖片並框選欄位</title>
+    <title>圖片上傳</title>
     <style>
+      /* 加入 loading 動畫樣式 */
+      /* 加入 loading 動畫樣式 */
+      #loading {
+        display: none;
+        position: fixed; /* 固定位置 */
+        top: 50%; /* 垂直居中 */
+        left: 50%; /* 水平居中 */
+        transform: translate(-50%, -50%); /* 使元素居中 */
+        font-size: 20px;
+        color: #007bff;
+        z-index: 9999; /* 確保它在其他元素上方 */
+        background-color: rgba(255, 255, 255, 0.8); /* 淺色背景 */
+        border-radius: 10px; /* 加一些圓角 */
+        padding: 20px; /* 內邊距，讓內容不緊貼邊緣 */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 添加陰影效果 */
+      }
+
+      #loading .spinner {
+        margin-right: 10px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #3498db;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite;
+      }
+
+      /* 旋轉動畫 */
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
       body {
         display: flex;
       }
@@ -40,11 +77,11 @@
       }
     </style>
   </head>
-
   <body>
     <div class="container">
-      <h2>上傳圖片並框選欄位</h2>
-      <input type="file" id="upload" accept="image/*" />
+      <h2>上傳圖片</h2>
+      <input type="file" id="fileInput" accept="image/*" />
+      <button onclick="uploadImage()">上傳</button>
       <br /><br />
       <button onclick="exportData()">匯出 JSON</button>
       <input
@@ -54,18 +91,50 @@
         onchange="importData(event)"
       />
       <br /><br />
+      <!-- 模式切換開關區域 -->
+      <div id="mode-switcher">
+        <label for="mode-toggle">模式切換：</label>
+        <input type="checkbox" id="mode-toggle" />
+        <span id="mode-status">目前是標題模式</span>
+      </div>
+
+      <div id="loading">
+        <div class="spinner"></div>
+        <span>處理中，請稍候...</span>
+      </div>
+      <pre id="output"></pre>
       <canvas id="canvas"></canvas>
       <br />
     </div>
     <div class="sidebar">
-      <h3>框選欄位</h3>
-      <ul id="fieldList"></ul>
+      <h3>標題 (Title)</h3>
+      <ul id="titleList"></ul>
+      <h3>內容 (Content)</h3>
+      <ul id="contentList"></ul>
     </div>
     <script>
-      const upload = document.getElementById("upload");
+      let isContentMode = false; // 初始為標題模式
+
+      // 取得開關與狀態顯示區域
+      const modeToggle = document.getElementById("mode-toggle");
+      const modeStatus = document.getElementById("mode-status");
+
+      // 監聽開關改變事件
+      modeToggle.addEventListener("change", () => {
+        isContentMode = modeToggle.checked; // 當開關開啟時是內容模式，否則是標題模式
+
+        // 更新顯示的模式
+        if (isContentMode) {
+          modeStatus.textContent = "目前是內容模式";
+        } else {
+          modeStatus.textContent = "目前是標題模式";
+        }
+      });
+
+      const upload = document.getElementById("fileInput");
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const fieldList = document.getElementById("fieldList");
+      const titleList = document.getElementById("titleList");
       let img = new Image();
       let fields = [];
       let imgScale = 1;
@@ -242,10 +311,24 @@
           const x = (e.clientX - rect.left) / canvas.width;
           const y = (e.clientY - rect.top) / canvas.height;
 
-          let fieldName = prompt("請輸入欄位名稱：");
-          if (fieldName) {
+          let inputValue = "";
+
+          // 根據模式來決定顯示標題或內容
+          if (!isContentMode) {
+            // 標題模式，讓用戶輸入欄位名稱
+            inputValue = prompt("請輸入標題名稱：");
+            mode = "title";
+          } else {
+            // 內容模式，讓用戶輸入欄位內容
+            inputValue = prompt("請輸入data內容：");
+            mode = "content";
+          }
+
+          // 如果有輸入，則保存框選區域並更新
+          if (inputValue) {
             fields.push({
-              name: fieldName,
+              mode: mode,
+              name: inputValue, // 根據模式，輸入的是標題或內容
               x: Math.min(startX, x),
               y: Math.min(startY, y),
               width: Math.abs(x - startX),
@@ -253,15 +336,18 @@
             });
             updateFieldList();
           }
+
           isDrawing = false;
         }
 
+        // 結束拖曳、調整大小的狀態
         isDragging = false;
         isResizing = false;
         resizeCorner = null;
         selectedField = null;
+
         canvas.removeEventListener("mousemove", onMouseMove);
-        redrawCanvas();
+        redrawCanvas(); // 重新繪製畫布，顯示更新後的框選區域
       });
 
       // 根據鼠標點擊的位置判斷是否點擊到角落
@@ -299,10 +385,11 @@
       function redrawCanvas() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        ctx.strokeStyle = "red";
         ctx.lineWidth = 2;
+
         fields.forEach((f) => {
-          // 畫出框選區域
+          // 根據 mode 設定不同顏色
+          ctx.strokeStyle = f.mode === "title" ? "red" : "green"; // title = 紅色框, content = 綠色框
           ctx.strokeRect(
             f.x * canvas.width,
             f.y * canvas.height,
@@ -310,71 +397,95 @@
             f.height * canvas.height
           );
 
-          // 畫出四個角落的圓點
+          // 顯示 Title（在框框上方）
+          if (f.mode === "title") {
+            ctx.fillStyle = "red";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText(
+              f.name,
+              f.x * canvas.width,
+              Math.max(f.y * canvas.height - 5, 14) // 避免文字超出畫布
+            );
+          }
+
+          // 顯示 Content（在框框內）
+          if (f.mode === "content") {
+            ctx.fillStyle = "green";
+            ctx.font = "22px Arial";
+            ctx.fillText(
+              f.name || "未填寫內容",
+              f.x * canvas.width + 5, // 稍微往右一點
+              f.y * canvas.height + 30 // 稍微往下，避免太靠邊
+            );
+          }
+
+          // 畫出四個角落的圓點（方便拖曳）
           const cornerSize = 5;
           ctx.fillStyle = "blue";
-          ctx.beginPath();
-          ctx.arc(
-            f.x * canvas.width,
-            f.y * canvas.height,
-            cornerSize,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(
-            (f.x + f.width) * canvas.width,
-            f.y * canvas.height,
-            cornerSize,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(
-            f.x * canvas.width,
-            (f.y + f.height) * canvas.height,
-            cornerSize,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(
-            (f.x + f.width) * canvas.width,
-            (f.y + f.height) * canvas.height,
-            cornerSize,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
+          const corners = [
+            [f.x, f.y], // 左上
+            [f.x + f.width, f.y], // 右上
+            [f.x, f.y + f.height], // 左下
+            [f.x + f.width, f.y + f.height], // 右下
+          ];
+          corners.forEach(([cx, cy]) => {
+            ctx.beginPath();
+            ctx.arc(
+              cx * canvas.width,
+              cy * canvas.height,
+              cornerSize,
+              0,
+              Math.PI * 2
+            );
+            ctx.fill();
+          });
         });
       }
 
       // 更新欄位列表
       function updateFieldList() {
-        fieldList.innerHTML = "";
+        const contentList = document.getElementById("contentList");
+        titleList.innerHTML = "";
+        contentList.innerHTML = "";
         fields.forEach((f, index) => {
           let li = document.createElement("li");
           li.textContent = `${f.name} (x: ${f.x.toFixed(2)}, y: ${f.y.toFixed(
             2
           )})`;
-          let btn = document.createElement("button");
-          btn.textContent = "刪除";
-          btn.onclick = () => {
+          // 編輯名稱按鈕
+          let editBtn = document.createElement("button");
+          editBtn.textContent = "編輯";
+          editBtn.onclick = () => {
+            let newName = prompt("請輸入新的名稱：", f.name);
+            if (newName !== null && newName.trim() !== "") {
+              fields[index].name = newName.trim();
+              updateFieldList();
+              redrawCanvas();
+            }
+          };
+
+          // 刪除按鈕
+          let deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "刪除";
+          deleteBtn.onclick = () => {
             fields.splice(index, 1);
             updateFieldList();
             redrawCanvas();
           };
-          li.appendChild(btn);
-          fieldList.appendChild(li);
+          li.appendChild(editBtn);
+          li.appendChild(deleteBtn);
+          // 根據 mode 類型，加入對應的清單
+          if (f.mode === "title") {
+            titleList.appendChild(li);
+          } else if (f.mode === "content") {
+            contentList.appendChild(li);
+          }
         });
       }
-
       // 匯出框選資料
       function exportData() {
         const absoluteFields = fields.map((f) => ({
+          mode: f.mode, // 修正這裡，確保每個框都有自己的模式
           name: f.name,
           x: Math.round(f.x * img.width),
           y: Math.round(f.y * img.height),
@@ -438,6 +549,69 @@
       document
         .getElementById("exportBtn")
         .addEventListener("click", exportData, false);
+
+      function uploadImage() {
+        let fileInput = document.getElementById("fileInput").files[0];
+        if (!fileInput) {
+          alert("請選擇圖片");
+          return;
+        }
+
+        let formData = new FormData();
+        formData.append("file", fileInput);
+
+        // 顯示 loading 動畫
+        document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
+        document.getElementById("output").textContent = ""; // 清空之前的結果
+
+        fetch("/upload", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // 隱藏 loading 動畫
+            document.getElementById("loading").style.display = "none";
+
+            // 檢查是否有錯誤訊息
+            if (data.error) {
+              alert("錯誤: " + data.error); // 顯示錯誤訊息
+            } else {
+              try {
+                console.log("調用 handleApiResponse 之前的資料:", data);
+                handleApiResponse(data); // 🔹 呼叫處理函式
+                // document.getElementById("output").textContent = JSON.stringify(
+                //   data,
+                //   null,
+                //   2
+                // ); // 顯示 JSON 結果
+              } catch (error) {
+                console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
+                alert("處理回應時發生錯誤，請查看 Console 訊息！");
+              }
+            }
+          })
+          .catch((error) => {
+            console.error("錯誤:", error);
+            // 隱藏 loading 動畫
+            document.getElementById("loading").style.display = "none";
+            alert("上傳失敗，請稍後再試！");
+          });
+      }
+      function handleApiResponse(data) {
+        console.log("🔹 API 回應:", data);
+
+        if (data.error) {
+          alert("❌ 錯誤：" + data.error);
+          return;
+        }
+
+        if (data.ocr_data && img.complete) {
+          updateFieldsWithRelativeCoordinates(data.ocr_data);
+        } else {
+          img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
+        }
+      }
     </script>
   </body>
 </html>

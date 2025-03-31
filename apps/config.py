@@ -6,6 +6,9 @@ load_dotenv()
 class Config(object):
     basedir = os.path.abspath(os.path.dirname(__file__))
 
+    # 直接指定 UPLOAD_FOLDER，不依賴 .env 檔案
+    UPLOAD_FOLDER = os.path.join(basedir, 'uploads')  # 或者根據需要修改路徑
+    
     # Assets Management
     ASSETS_ROOT = os.getenv('ASSETS_ROOT', '/static/assets')
 
