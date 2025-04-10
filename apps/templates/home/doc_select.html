@@ -17,6 +17,80 @@
 
 {% endblock stylesheets %}
 
+<style>
+  /* 加入 loading 動畫樣式 */
+  /* 加入 loading 動畫樣式 */
+  #loading {
+    display: none;
+    position: fixed; /* 固定位置 */
+    top: 50%; /* 垂直居中 */
+    left: 50%; /* 水平居中 */
+    transform: translate(-50%, -50%); /* 使元素居中 */
+    font-size: 20px;
+    color: #007bff;
+    z-index: 9999; /* 確保它在其他元素上方 */
+    background-color: rgba(255, 255, 255, 0.8); /* 淺色背景 */
+    border-radius: 10px; /* 加一些圓角 */
+    padding: 20px; /* 內邊距，讓內容不緊貼邊緣 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 添加陰影效果 */
+  }
+
+  #loading .spinner {
+    margin-right: 10px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  /* 旋轉動畫 */
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  body {
+    display: flex;
+  }
+
+  .container {
+    flex: 2;
+    text-align: center;
+  }
+
+  .sidebar {
+    width: 300px;
+    padding: 10px;
+    border-left: 1px solid #ccc;
+  }
+
+  canvas {
+    border: 1px solid black;
+    cursor: crosshair;
+    max-width: 90%;
+    /* display: block; */
+    
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+
 {% block content %}    
 
   <div class="content-wrapper">
@@ -43,6 +117,10 @@
       <div class="container-fluid">
         <div class="row">
           <!-- left column -->
+           <div class="col-md-10">
+
+          
+           </div>
 
           <div class="col-md-10">
             <!-- general form elements -->
@@ -54,19 +132,56 @@
               <!-- form start -->
               <form>
                 <div class="card-body">
-{#                  <div class="form-group">#}
-{#                    <label for="exampleInputEmail1">Email address</label>#}
-{#                    <input type="email" class="form-control" id="exampleInputEmail1" placeholder="Enter email">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label for="exampleInputPassword1">Password</label>#}
-{#                    <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password">#}
-{#                  </div>#}
-                   <img class="img-fluid pad" src="/static/assets/img/blank.png" alt="Photo">
-{#                  <div class="form-check">#}
-{#                    <input type="checkbox" class="form-check-input" id="exampleCheck1">#}
-{#                    <label class="form-check-label" for="exampleCheck1">Check me out</label>#}
-{#                  </div>#}
+                 
+                  <div class="form-group">
+                    <label for="fileInput">File input</label>
+                    <div class="input-group">
+                      <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="fileInput">
+                        <label class="custom-file-label" for="fileInput">Choose file</label>
+                      </div>
+                      <div class="input-group-append">
+                        <!-- <span class="input-group-text" >Upload</span> -->
+                        <span class="input-group-text"  onclick="uploadImage()">Upload</span>
+
+                        
+                      </div>
+                    </div>
+                  </div>
+                     
+
+                        <!-- <input type="file" id="fileInput" accept="image/*" />
+                        <button onclick="uploadImage()">上傳</button>
+                        <br /><br /> -->
+                        <button onclick="exportData()">匯出 JSON</button>
+                        <input
+                          type="file"
+                          id="importFile"
+                          accept="application/json"
+                          onchange="importData(event)"
+                        />
+                        <br /><br />
+                        <!-- 模式切換開關區域 -->
+                        <div id="mode-switcher">
+                          <label for="mode-toggle">模式切換：</label>
+                          <input type="checkbox" id="mode-toggle" />
+                          <span id="mode-status">目前是標題模式</span>
+                        </div>
+                  
+                        <div id="loading">
+                          <div class="spinner"></div>
+                          <span>處理中，請稍候...</span>
+                        </div>
+                        <pre id="output"></pre>
+                        <canvas id="canvas" ></canvas>
+               
+                    
+                    <div class="input-group-append">
+                      
+                      <span class="input-group-text" onclick="uploadImage()" >Upload</span>
+                    
+                    </div>
+                  
                 </div>
                 <!-- /.card-body -->
 
@@ -81,516 +196,11 @@
             <!-- /.card -->
 
             <!-- Form Element sizes -->
-{#            <div class="card card-success">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">Different Height</h3>#}
-{#              </div>#}
-{#              <div class="card-body">#}
-{#                <input class="form-control form-control-lg" type="text" placeholder=".form-control-lg">#}
-{#                <br>#}
-{#                <input class="form-control" type="text" placeholder="Default input">#}
-{#                <br>#}
-{#                <input class="form-control form-control-sm" type="text" placeholder=".form-control-sm">#}
-{#              </div>#}
-{#              <!-- /.card-body -->#}
-{#            </div>#}
-            <!-- /.card -->
-{##}
-{#            <div class="card card-danger">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">Different Width</h3>#}
-{#              </div>#}
-{#              <div class="card-body">#}
-{#                <div class="row">#}
-{#                  <div class="col-3">#}
-{#                    <input type="text" class="form-control" placeholder=".col-3">#}
-{#                  </div>#}
-{#                  <div class="col-4">#}
-{#                    <input type="text" class="form-control" placeholder=".col-4">#}
-{#                  </div>#}
-{#                  <div class="col-5">#}
-{#                    <input type="text" class="form-control" placeholder=".col-5">#}
-{#                  </div>#}
-{#                </div>#}
-{#              </div>#}
-{#              <!-- /.card-body -->#}
-{#            </div>#}
-            <!-- /.card -->
+
+
 
             <!-- Input addon -->
-{#            <div class="card card-info">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">Input Addon</h3>#}
-{#              </div>#}
-{#              <div class="card-body">#}
-{#                <div class="input-group mb-3">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <span class="input-group-text">@</span>#}
-{#                  </div>#}
-{#                  <input type="text" class="form-control" placeholder="Username">#}
-{#                </div>#}
-{##}
-{#                <div class="input-group mb-3">#}
-{#                  <input type="text" class="form-control">#}
-{#                  <div class="input-group-append">#}
-{#                    <span class="input-group-text">.00</span>#}
-{#                  </div>#}
-{#                </div>#}
-{##}
-{#                <div class="input-group">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <span class="input-group-text">$</span>#}
-{#                  </div>#}
-{#                  <input type="text" class="form-control">#}
-{#                  <div class="input-group-append">#}
-{#                    <span class="input-group-text">.00</span>#}
-{#                  </div>#}
-{#                </div>#}
-{##}
-{#                <h4>With icons</h4>#}
-{##}
-{#                <div class="input-group mb-3">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>#}
-{#                  </div>#}
-{#                  <input type="email" class="form-control" placeholder="Email">#}
-{#                </div>#}
-{##}
-{#                <div class="input-group mb-3">#}
-{#                  <input type="text" class="form-control">#}
-{#                  <div class="input-group-append">#}
-{#                    <span class="input-group-text"><i class="fas fa-check"></i></span>#}
-{#                  </div>#}
-{#                </div>#}
-{##}
-{#                <div class="input-group">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <span class="input-group-text">#}
-{#                      <i class="fas fa-dollar-sign"></i>#}
-{#                    </span>#}
-{#                  </div>#}
-{#                  <input type="text" class="form-control">#}
-{#                  <div class="input-group-append">#}
-{#                    <div class="input-group-text"><i class="fas fa-ambulance"></i></div>#}
-{#                  </div>#}
-{#                </div>#}
-{##}
-{#                <h5 class="mt-4 mb-2">With checkbox and radio inputs</h5>#}
-{##}
-{#                <div class="row">#}
-{#                  <div class="col-lg-6">#}
-{#                    <div class="input-group">#}
-{#                      <div class="input-group-prepend">#}
-{#                        <span class="input-group-text">#}
-{#                          <input type="checkbox">#}
-{#                        </span>#}
-{#                      </div>#}
-{#                      <input type="text" class="form-control">#}
-{#                    </div>#}
-{#                    <!-- /input-group -->#}
-{#                  </div>#}
-{#                  <!-- /.col-lg-6 -->#}
-{#                  <div class="col-lg-6">#}
-{#                    <div class="input-group">#}
-{#                      <div class="input-group-prepend">#}
-{#                        <span class="input-group-text"><input type="radio"></span>#}
-{#                      </div>#}
-{#                      <input type="text" class="form-control">#}
-{#                    </div>#}
-{#                    <!-- /input-group -->#}
-{#                  </div>#}
-{#                  <!-- /.col-lg-6 -->#}
-{#                </div>#}
-{#                <!-- /.row -->#}
-{##}
-{#                <h5 class="mt-4 mb-2">With buttons</h5>#}
-{##}
-{#                <p>Large: <code>.input-group.input-group-lg</code></p>#}
-{##}
-{#                <div class="input-group input-group-lg mb-3">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <button type="button" class="btn btn-warning dropdown-toggle" data-toggle="dropdown">#}
-{#                      Action#}
-{#                    </button>#}
-{#                    <ul class="dropdown-menu">#}
-{#                      <li class="dropdown-item"><a href="#">Action</a></li>#}
-{#                      <li class="dropdown-item"><a href="#">Another action</a></li>#}
-{#                      <li class="dropdown-item"><a href="#">Something else here</a></li>#}
-{#                      <li class="dropdown-divider"></li>#}
-{#                      <li class="dropdown-item"><a href="#">Separated link</a></li>#}
-{#                    </ul>#}
-{#                  </div>#}
-{#                  <!-- /btn-group -->#}
-{#                  <input type="text" class="form-control">#}
-{#                </div>#}
-{#                <!-- /input-group -->#}
-{##}
-{#                <p>Normal</p>#}
-{#                <div class="input-group mb-3">#}
-{#                  <div class="input-group-prepend">#}
-{#                    <button type="button" class="btn btn-danger">Action</button>#}
-{#                  </div>#}
-{#                  <!-- /btn-group -->#}
-{#                  <input type="text" class="form-control">#}
-{#                </div>#}
-{#                <!-- /input-group -->#}
-{##}
-{#                <p>Small <code>.input-group.input-group-sm</code></p>#}
-{#                <div class="input-group input-group-sm">#}
-{#                  <input type="text" class="form-control">#}
-{#                  <span class="input-group-append">#}
-{#                    <button type="button" class="btn btn-info btn-flat">Go!</button>#}
-{#                  </span>#}
-{#                </div>#}
-{#                <!-- /input-group -->#}
-{#              </div>#}
-{#              <!-- /.card-body -->#}
-{#            </div>#}
-            <!-- /.card -->
-            <!-- Horizontal Form -->
-{#            <div class="card card-info">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">Horizontal Form</h3>#}
-{#              </div>#}
-{#              <!-- /.card-header -->#}
-{#              <!-- form start -->#}
-{#              <form class="form-horizontal">#}
-{#                <div class="card-body">#}
-{#                  <div class="form-group row">#}
-{#                    <label for="inputEmail3" class="col-sm-2 col-form-label">Email</label>#}
-{#                    <div class="col-sm-10">#}
-{#                      <input type="email" class="form-control" id="inputEmail3" placeholder="Email">#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group row">#}
-{#                    <label for="inputPassword3" class="col-sm-2 col-form-label">Password</label>#}
-{#                    <div class="col-sm-10">#}
-{#                      <input type="password" class="form-control" id="inputPassword3" placeholder="Password">#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group row">#}
-{#                    <div class="offset-sm-2 col-sm-10">#}
-{#                      <div class="form-check">#}
-{#                        <input type="checkbox" class="form-check-input" id="exampleCheck2">#}
-{#                        <label class="form-check-label" for="exampleCheck2">Remember me</label>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                </div>#}
-{#                <!-- /.card-body -->#}
-{#                <div class="card-footer">#}
-{#                  <button type="submit" class="btn btn-info">Sign in</button>#}
-{#                  <button type="submit" class="btn btn-default float-right">Cancel</button>#}
-{#                </div>#}
-{#                <!-- /.card-footer -->#}
-{#              </form>#}
-{#            </div>#}
-            <!-- /.card -->
 
-{#          </div>#}
-{#          <!--/.col (left) -->#}
-          <!-- right column -->
-{#          <div class="col-md-6">#}
-{#            <!-- general form elements disabled -->#}
-{#            <div class="card card-warning">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">General Elements</h3>#}
-{#              </div>#}
-{#              <!-- /.card-header -->#}
-{#              <div class="card-body">#}
-{#                <form>#}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- text input -->#}
-{#                      <div class="form-group">#}
-{#                        <label>Text</label>#}
-{#                        <input type="text" class="form-control" placeholder="Enter ...">#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Text Disabled</label>#}
-{#                        <input type="text" class="form-control" placeholder="Enter ..." disabled>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- textarea -->#}
-{#                      <div class="form-group">#}
-{#                        <label>Textarea</label>#}
-{#                        <textarea class="form-control" rows="3" placeholder="Enter ..."></textarea>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Textarea Disabled</label>#}
-{#                        <textarea class="form-control" rows="3" placeholder="Enter ..." disabled></textarea>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <!-- input states -->#}
-{#                  <div class="form-group">#}
-{#                    <label class="col-form-label" for="inputSuccess"><i class="fas fa-check"></i> Input with#}
-{#                      success</label>#}
-{#                    <input type="text" class="form-control is-valid" id="inputSuccess" placeholder="Enter ...">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label class="col-form-label" for="inputWarning"><i class="far fa-bell"></i> Input with#}
-{#                      warning</label>#}
-{#                    <input type="text" class="form-control is-warning" id="inputWarning" placeholder="Enter ...">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label class="col-form-label" for="inputError"><i class="far fa-times-circle"></i> Input with#}
-{#                      error</label>#}
-{#                    <input type="text" class="form-control is-invalid" id="inputError" placeholder="Enter ...">#}
-{#                  </div>#}
-{##}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- checkbox -->#}
-{#                      <div class="form-group">#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="checkbox">#}
-{#                          <label class="form-check-label">Checkbox</label>#}
-{#                        </div>#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="checkbox" checked>#}
-{#                          <label class="form-check-label">Checkbox checked</label>#}
-{#                        </div>#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="checkbox" disabled>#}
-{#                          <label class="form-check-label">Checkbox disabled</label>#}
-{#                        </div>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- radio -->#}
-{#                      <div class="form-group">#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="radio" name="radio1">#}
-{#                          <label class="form-check-label">Radio</label>#}
-{#                        </div>#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="radio" name="radio1" checked>#}
-{#                          <label class="form-check-label">Radio checked</label>#}
-{#                        </div>#}
-{#                        <div class="form-check">#}
-{#                          <input class="form-check-input" type="radio" disabled>#}
-{#                          <label class="form-check-label">Radio disabled</label>#}
-{#                        </div>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- select -->#}
-{#                      <div class="form-group">#}
-{#                        <label>Select</label>#}
-{#                        <select class="form-control">#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Select Disabled</label>#}
-{#                        <select class="form-control" disabled>#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- Select multiple-->#}
-{#                      <div class="form-group">#}
-{#                        <label>Select Multiple</label>#}
-{#                        <select multiple class="form-control">#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Select Multiple Disabled</label>#}
-{#                        <select multiple class="form-control" disabled>#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                </form>#}
-{#              </div>#}
-{#              <!-- /.card-body -->#}
-{#            </div>#}
-{#            <!-- /.card -->#}
-{#            <!-- general form elements disabled -->#}
-{#            <div class="card card-secondary">#}
-{#              <div class="card-header">#}
-{#                <h3 class="card-title">Custom Elements</h3>#}
-{#              </div>#}
-{#              <!-- /.card-header -->#}
-{#              <div class="card-body">#}
-{#                <form>#}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- checkbox -->#}
-{#                      <div class="form-group">#}
-{#                        <div class="custom-control custom-checkbox">#}
-{#                          <input class="custom-control-input" type="checkbox" id="customCheckbox1" value="option1">#}
-{#                          <label for="customCheckbox1" class="custom-control-label">Custom Checkbox</label>#}
-{#                        </div>#}
-{#                        <div class="custom-control custom-checkbox">#}
-{#                          <input class="custom-control-input" type="checkbox" id="customCheckbox2" checked>#}
-{#                          <label for="customCheckbox2" class="custom-control-label">Custom Checkbox checked</label>#}
-{#                        </div>#}
-{#                        <div class="custom-control custom-checkbox">#}
-{#                          <input class="custom-control-input" type="checkbox" id="customCheckbox3" disabled>#}
-{#                          <label for="customCheckbox3" class="custom-control-label">Custom Checkbox disabled</label>#}
-{#                        </div>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- radio -->#}
-{#                      <div class="form-group">#}
-{#                        <div class="custom-control custom-radio">#}
-{#                          <input class="custom-control-input" type="radio" id="customRadio1" name="customRadio">#}
-{#                          <label for="customRadio1" class="custom-control-label">Custom Radio</label>#}
-{#                        </div>#}
-{#                        <div class="custom-control custom-radio">#}
-{#                          <input class="custom-control-input" type="radio" id="customRadio2" name="customRadio" checked>#}
-{#                          <label for="customRadio2" class="custom-control-label">Custom Radio checked</label>#}
-{#                        </div>#}
-{#                        <div class="custom-control custom-radio">#}
-{#                          <input class="custom-control-input" type="radio" id="customRadio3" disabled>#}
-{#                          <label for="customRadio3" class="custom-control-label">Custom Radio disabled</label>#}
-{#                        </div>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- select -->#}
-{#                      <div class="form-group">#}
-{#                        <label>Custom Select</label>#}
-{#                        <select class="custom-select">#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Custom Select Disabled</label>#}
-{#                        <select class="custom-select" disabled>#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <div class="row">#}
-{#                    <div class="col-sm-6">#}
-{#                      <!-- Select multiple-->#}
-{#                      <div class="form-group">#}
-{#                        <label>Custom Select Multiple</label>#}
-{#                        <select multiple class="custom-select">#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                    <div class="col-sm-6">#}
-{#                      <div class="form-group">#}
-{#                        <label>Custom Select Multiple Disabled</label>#}
-{#                        <select multiple class="custom-select" disabled>#}
-{#                          <option>option 1</option>#}
-{#                          <option>option 2</option>#}
-{#                          <option>option 3</option>#}
-{#                          <option>option 4</option>#}
-{#                          <option>option 5</option>#}
-{#                        </select>#}
-{#                      </div>#}
-{#                    </div>#}
-{#                  </div>#}
-{##}
-{#                  <div class="form-group">#}
-{#                    <div class="custom-control custom-switch">#}
-{#                      <input type="checkbox" class="custom-control-input" id="customSwitch1">#}
-{#                      <label class="custom-control-label" for="customSwitch1">Toggle this custom switch element</label>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <div class="custom-control custom-switch custom-switch-off-danger custom-switch-on-success">#}
-{#                      <input type="checkbox" class="custom-control-input" id="customSwitch3">#}
-{#                      <label class="custom-control-label" for="customSwitch3">Toggle this custom switch element with custom colors danger/success</label>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <div class="custom-control custom-switch">#}
-{#                      <input type="checkbox" class="custom-control-input" disabled id="customSwitch2">#}
-{#                      <label class="custom-control-label" for="customSwitch2">Disabled custom switch element</label>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label for="customRange1">Custom range</label>#}
-{#                    <input type="range" class="custom-range" id="customRange1">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label for="customRange2">Custom range (custom-range-danger)</label>#}
-{#                    <input type="range" class="custom-range custom-range-danger" id="customRange2">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <label for="customRange3">Custom range (custom-range-teal)</label>#}
-{#                    <input type="range" class="custom-range custom-range-teal" id="customRange3">#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                    <!-- <label for="customFile">Custom File</label> -->#}
-{##}
-{#                    <div class="custom-file">#}
-{#                      <input type="file" class="custom-file-input" id="customFile">#}
-{#                      <label class="custom-file-label" for="customFile">Choose file</label>#}
-{#                    </div>#}
-{#                  </div>#}
-{#                  <div class="form-group">#}
-{#                  </div>#}
-{#                </form>#}
-{#              </div>#}
-{#              <!-- /.card-body -->#}
-{#            </div>#}
-{#            <!-- /.card -->#}
-{#          </div>#}
           <!--/.col (right) -->
         </div>
         <!-- /.row -->
@@ -598,6 +208,508 @@
     </section>
     <!-- /.content -->
   </div>
+  <script>
+    let isContentMode = false; // 初始為標題模式
+
+    // 取得開關與狀態顯示區域
+    const modeToggle = document.getElementById("mode-toggle");
+    const modeStatus = document.getElementById("mode-status");
+
+    // 監聽開關改變事件
+    modeToggle.addEventListener("change", () => {
+      isContentMode = modeToggle.checked; // 當開關開啟時是內容模式，否則是標題模式
+
+      // 更新顯示的模式
+      if (isContentMode) {
+        modeStatus.textContent = "目前是內容模式";
+      } else {
+        modeStatus.textContent = "目前是標題模式";
+      }
+    });
+
+    const upload = document.getElementById("fileInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const titleList = document.getElementById("titleList");
+    let img = new Image();
+    let fields = [];
+    let imgScale = 1;
+    let selectedField = null;
+    let isDragging = false;
+    let isResizing = false;
+    let dragOffsetX, dragOffsetY;
+    let startX, startY;
+    let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
+    let isDrawing = false;
+
+    upload.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    img.onload = function () {
+      const maxWidth = window.innerWidth * 0.7;
+      imgScale = maxWidth / img.width;
+      canvas.width = img.width * imgScale;
+      canvas.height = img.height * imgScale;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+
+    // 當按下滑鼠時
+    canvas.addEventListener("mousedown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / canvas.width;
+      const y = (e.clientY - rect.top) / canvas.height;
+
+      selectedField = fields.find(
+        (f) =>
+          x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+      );
+
+      if (selectedField) {
+        // 檢查是否點擊到四個角落
+        resizeCorner = getResizeCorner(x, y, selectedField);
+        if (resizeCorner) {
+          isResizing = true;
+        } else {
+          isDragging = true;
+          dragOffsetX = x - selectedField.x;
+          dragOffsetY = y - selectedField.y;
+        }
+        canvas.addEventListener("mousemove", onMouseMove);
+      } else {
+        // 開始繪製新的框選區域
+        startX = x;
+        startY = y;
+        isDrawing = true;
+      }
+    });
+
+    // 當滑鼠移動時
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / canvas.width;
+      const y = (e.clientY - rect.top) / canvas.height;
+
+      // 檢查是否滑鼠懸停在框選區域上
+      const hoveredField = fields.find(
+        (f) =>
+          x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+      );
+
+      if (hoveredField) {
+        canvas.style.cursor = "pointer"; // 當滑鼠懸停在框選區域上，顯示可拖曳游標
+      } else {
+        canvas.style.cursor = "crosshair"; // 否則，恢復預設游標
+      }
+
+      if (isDrawing) {
+        redrawCanvas();
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          startX * canvas.width,
+          startY * canvas.height,
+          (x - startX) * canvas.width,
+          (y - startY) * canvas.height
+        );
+      } else if (isDragging && selectedField) {
+        // 拖曳框選
+        selectedField.x = x - dragOffsetX;
+        selectedField.y = y - dragOffsetY;
+        redrawCanvas();
+      } else if (isResizing && selectedField && resizeCorner) {
+        // 根據選擇的角落來調整大小
+        switch (resizeCorner) {
+          case "topLeft":
+            // 更新左上角大小，並確保寬度和高度為正數
+            selectedField.width += selectedField.x - x;
+            selectedField.height += selectedField.y - y;
+            selectedField.x = x;
+            selectedField.y = y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x - selectedField.width;
+              selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+          case "topRight":
+            // 更新右上角大小
+            selectedField.width = x - selectedField.x;
+            selectedField.height += selectedField.y - y;
+            selectedField.y = y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+
+            // 偵測是否有反轉，如果是，就切換為右下角
+            if (selectedField.height < 0) {
+              resizeCorner = "bottomRight";
+            }
+            break;
+          case "bottomLeft":
+            // 更新左下角大小
+            selectedField.width += selectedField.x - x;
+            selectedField.height = y - selectedField.y;
+            selectedField.x = x;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+          case "bottomRight":
+            // 更新右下角大小
+            selectedField.width = x - selectedField.x;
+            selectedField.height = y - selectedField.y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+        }
+
+        // 重新繪製畫布，更新框選區域
+        redrawCanvas();
+      }
+      updateFieldList();
+    });
+
+    // 當滑鼠放開時
+    canvas.addEventListener("mouseup", (e) => {
+      if (isDrawing) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / canvas.width;
+        const y = (e.clientY - rect.top) / canvas.height;
+
+        let inputValue = "";
+
+        // 根據模式來決定顯示標題或內容
+        if (!isContentMode) {
+          // 標題模式，讓用戶輸入欄位名稱
+          inputValue = prompt("請輸入標題名稱：");
+          mode = "title";
+        } else {
+          // 內容模式，讓用戶輸入欄位內容
+          inputValue = prompt("請輸入data內容：");
+          mode = "content";
+        }
+
+        // 如果有輸入，則保存框選區域並更新
+        if (inputValue) {
+          fields.push({
+            mode: mode,
+            name: inputValue, // 根據模式，輸入的是標題或內容
+            x: Math.min(startX, x),
+            y: Math.min(startY, y),
+            width: Math.abs(x - startX),
+            height: Math.abs(y - startY),
+          });
+          updateFieldList();
+        }
+
+        isDrawing = false;
+      }
+
+      // 結束拖曳、調整大小的狀態
+      isDragging = false;
+      isResizing = false;
+      resizeCorner = null;
+      selectedField = null;
+
+      canvas.removeEventListener("mousemove", onMouseMove);
+      redrawCanvas(); // 重新繪製畫布，顯示更新後的框選區域
+    });
+
+    // 根據鼠標點擊的位置判斷是否點擊到角落
+    function getResizeCorner(x, y, field) {
+      const cornerThreshold = 10; // 邊界距離臨界值
+      const left = field.x * canvas.width;
+      const top = field.y * canvas.height;
+      const right = (field.x + field.width) * canvas.width;
+      const bottom = (field.y + field.height) * canvas.height;
+
+      if (
+        Math.abs(x * canvas.width - left) < cornerThreshold &&
+        Math.abs(y * canvas.height - top) < cornerThreshold
+      ) {
+        return "topLeft";
+      } else if (
+        Math.abs(x * canvas.width - right) < cornerThreshold &&
+        Math.abs(y * canvas.height - top) < cornerThreshold
+      ) {
+        return "topRight";
+      } else if (
+        Math.abs(x * canvas.width - left) < cornerThreshold &&
+        Math.abs(y * canvas.height - bottom) < cornerThreshold
+      ) {
+        return "bottomLeft";
+      } else if (
+        Math.abs(x * canvas.width - right) < cornerThreshold &&
+        Math.abs(y * canvas.height - bottom) < cornerThreshold
+      ) {
+        return "bottomRight";
+      }
+      return null;
+    }
+
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+
+      fields.forEach((f) => {
+        // 根據 mode 設定不同顏色
+        ctx.strokeStyle = f.mode === "title" ? "red" : "green"; // title = 紅色框, content = 綠色框
+        ctx.strokeRect(
+          f.x * canvas.width,
+          f.y * canvas.height,
+          f.width * canvas.width,
+          f.height * canvas.height
+        );
+
+        // 顯示 Title（在框框上方）
+        if (f.mode === "title") {
+          ctx.fillStyle = "red";
+          ctx.font = "bold 14px Arial";
+          ctx.fillText(
+            f.name,
+            f.x * canvas.width,
+            Math.max(f.y * canvas.height - 5, 14) // 避免文字超出畫布
+          );
+        }
+
+        // 顯示 Content（在框框內）
+        if (f.mode === "content") {
+          ctx.fillStyle = "green";
+          ctx.font = "22px Arial";
+          ctx.fillText(
+            f.name || "未填寫內容",
+            f.x * canvas.width + 5, // 稍微往右一點
+            f.y * canvas.height + 30 // 稍微往下，避免太靠邊
+          );
+        }
+
+        // 畫出四個角落的圓點（方便拖曳）
+        const cornerSize = 5;
+        ctx.fillStyle = "blue";
+        const corners = [
+          [f.x, f.y], // 左上
+          [f.x + f.width, f.y], // 右上
+          [f.x, f.y + f.height], // 左下
+          [f.x + f.width, f.y + f.height], // 右下
+        ];
+        corners.forEach(([cx, cy]) => {
+          ctx.beginPath();
+          ctx.arc(
+            cx * canvas.width,
+            cy * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        });
+      });
+    }
+
+    // 更新欄位列表
+    function updateFieldList() {
+      const contentList = document.getElementById("contentList");
+      titleList.innerHTML = "";
+      contentList.innerHTML = "";
+      fields.forEach((f, index) => {
+        let li = document.createElement("li");
+        li.textContent = `${f.name} (x: ${f.x.toFixed(2)}, y: ${f.y.toFixed(
+          2
+        )})`;
+        // 編輯名稱按鈕
+        let editBtn = document.createElement("button");
+        editBtn.textContent = "編輯";
+        editBtn.onclick = () => {
+          let newName = prompt("請輸入新的名稱：", f.name);
+          if (newName !== null && newName.trim() !== "") {
+            fields[index].name = newName.trim();
+            updateFieldList();
+            redrawCanvas();
+          }
+        };
+
+        // 刪除按鈕
+        let deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "刪除";
+        deleteBtn.onclick = () => {
+          fields.splice(index, 1);
+          updateFieldList();
+          redrawCanvas();
+        };
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        // 根據 mode 類型，加入對應的清單
+        if (f.mode === "title") {
+          titleList.appendChild(li);
+        } else if (f.mode === "content") {
+          contentList.appendChild(li);
+        }
+      });
+    }
+    // 匯出框選資料
+    function exportData() {
+      const absoluteFields = fields.map((f) => ({
+        mode: f.mode, // 修正這裡，確保每個框都有自己的模式
+        name: f.name,
+        x: Math.round(f.x * img.width),
+        y: Math.round(f.y * img.height),
+        width: Math.round(f.width * img.width),
+        height: Math.round(f.height * img.height),
+      }));
+
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(absoluteFields, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "bounding_boxes.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // 匯入框選資料
+    function importData(event) {
+      const file = event.target.files[0];
+
+      // 確保即使選擇相同的檔案也會觸發 change 事件
+      event.target.value = "";
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const importedFields = JSON.parse(e.target.result);
+
+            if (!img.complete) {
+              img.onload = () =>
+                updateFieldsWithRelativeCoordinates(importedFields);
+            } else {
+              updateFieldsWithRelativeCoordinates(importedFields);
+            }
+          } catch (error) {
+            alert("無法解析 JSON 檔案");
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function updateFieldsWithRelativeCoordinates(importedFields) {
+      fields = importedFields.map((f) => ({
+        ...f,
+        x: f.x / img.width,
+        y: f.y / img.height,
+        width: f.width / img.width,
+        height: f.height / img.height,
+      }));
+      updateFieldList();
+      redrawCanvas();
+    }
+
+    document
+      .getElementById("importBtn")
+      .addEventListener("change", importData, false);
+    document
+      .getElementById("exportBtn")
+      .addEventListener("click", exportData, false);
+
+    function uploadImage() {
+      let fileInput = document.getElementById("fileInput").files[0];
+      if (!fileInput) {
+        alert("請選擇圖片");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", fileInput);
+
+      // 顯示 loading 動畫
+      document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
+      document.getElementById("output").textContent = ""; // 清空之前的結果
+
+      fetch("/upload", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          // 隱藏 loading 動畫
+          document.getElementById("loading").style.display = "none";
+
+          // 檢查是否有錯誤訊息
+          if (data.error) {
+            alert("錯誤: " + data.error); // 顯示錯誤訊息
+          } else {
+            try {
+              console.log("調用 handleApiResponse 之前的資料:", data);
+              handleApiResponse(data); // 🔹 呼叫處理函式
+              // document.getElementById("output").textContent = JSON.stringify(
+              //   data,
+              //   null,
+              //   2
+              // ); // 顯示 JSON 結果
+            } catch (error) {
+              console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
+              alert("處理回應時發生錯誤，請查看 Console 訊息！");
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("錯誤:", error);
+          // 隱藏 loading 動畫
+          document.getElementById("loading").style.display = "none";
+          alert("上傳失敗，請稍後再試！");
+        });
+    }
+    function handleApiResponse(data) {
+      console.log("🔹 API 回應:", data);
+
+      if (data.error) {
+        alert("❌ 錯誤：" + data.error);
+        return;
+      }
+
+      if (data.ocr_data && img.complete) {
+        updateFieldsWithRelativeCoordinates(data.ocr_data);
+      } else {
+        img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
+      }
+    }
+  </script>
+  
 
 {% endblock content %}
 
