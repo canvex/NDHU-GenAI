@@ -8,7 +8,6 @@ from flask import render_template, request, redirect, url_for, jsonify, current_
 
 from flask import flash  # 如果還沒有導入
 from flask_login import login_required, current_user
-from flask_login import login_required
 from jinja2 import TemplateNotFound
 import shutil
 import os
@@ -105,7 +104,6 @@ def doc_upload():
     return render_template('home/doc_upload.html', segment='doc_upload')
 
 # 文件選取
-
 
 @blueprint.route('/doc_select', methods=['GET', 'POST'])
 def doc_select():
