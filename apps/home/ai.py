@@ -35,6 +35,7 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
 
     filtered_results = [
         {
+            "id": f"a{idx}",  # 新增 id 欄位，以 a 開頭
             "mode": "answer",
             "name": idx + 1,
             "x": pred["x"] - pred["width"] / 2,
@@ -47,7 +48,7 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
         for idx, pred in enumerate(res["predictions"])
         if pred["class"] == "answer"
     ]
-    print(filtered_results)
+    # print(filtered_results)
 
     # 讀取現有 JSON 資料
     try:

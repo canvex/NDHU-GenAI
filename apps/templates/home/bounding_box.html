@@ -325,6 +325,8 @@
         updateFieldList();
       });
 
+      let questionIdCounter = 0;
+      let answerIdCounter = 0;
       // 當滑鼠放開時
       canvas.addEventListener("mouseup", (e) => {
         if (isDrawing) {
@@ -347,7 +349,12 @@
 
           // 如果有輸入，則保存框選區域並更新
           if (inputValue) {
+            const fieldId =
+              mode === "question"
+                ? `q${questionIdCounter++}`
+                : `a${answerIdCounter++}`;
             fields.push({
+              id: fieldId,
               mode: mode,
               name: inputValue, // 根據模式，輸入的是問題或答案
               x: Math.min(startX, x),
@@ -526,6 +533,7 @@
           y: Math.round(f.y * img.height),
           width: Math.round(f.width * img.width),
           height: Math.round(f.height * img.height),
+          id: f.id,
         }));
 
         const dataStr =
@@ -558,6 +566,11 @@
               } else {
                 updateFieldsWithRelativeCoordinates(importedFields);
               }
+
+              // 更新目前的 ID 編號計數器
+              questionIdCounter = 0;
+              answerIdCounter = 0;
+              updateIdCountersFromFields(importedFields);
             } catch (error) {
               alert("無法解析 JSON 檔案");
             }
@@ -641,10 +654,16 @@
           return;
         }
 
+        questionIdCounter = 0;
+        answerIdCounter = 0;
         if (data.ocr_data && img.complete) {
           updateFieldsWithRelativeCoordinates(data.ocr_data);
+          updateIdCountersFromFields(data.ocr_data); // ✅ 加這行
         } else {
-          img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
+          img.onload = () => {
+            updateFieldsWithRelativeCoordinates(data.ocr_data);
+            updateIdCountersFromFields(data.ocr_data); // ✅ 加這行
+          };
         }
       }
 
@@ -668,6 +687,24 @@
           // 再把原本的畫面畫回來（顯示框框）
           redrawCanvas(true);
         }, 100); // 100ms 延遲通常就夠用了
+      }
+
+      //更新id目前到多少
+      function updateIdCountersFromFields(fields) {
+        fields.forEach((field) => {
+          const id = field.id;
+          if (id && id.startsWith("q")) {
+            const num = parseInt(id.slice(1));
+            if (!isNaN(num)) {
+              questionIdCounter = Math.max(questionIdCounter, num + 1);
+            }
+          } else if (id && id.startsWith("a")) {
+            const num = parseInt(id.slice(1));
+            if (!isNaN(num)) {
+              answerIdCounter = Math.max(answerIdCounter, num + 1);
+            }
+          }
+        });
       }
     </script>
   </body>
