@@ -91,11 +91,13 @@
         onchange="importData(event)"
       />
       <br /><br />
+      <button onclick="downloadImage()">下載圖片</button>
+      <br /><br />
       <!-- 模式切換開關區域 -->
       <div id="mode-switcher">
         <label for="mode-toggle">模式切換：</label>
         <input type="checkbox" id="mode-toggle" />
-        <span id="mode-status">目前是標題模式</span>
+        <span id="mode-status">目前是問題模式</span>
       </div>
 
       <div id="loading">
@@ -107,13 +109,13 @@
       <br />
     </div>
     <div class="sidebar">
-      <h3>標題 (Title)</h3>
-      <ul id="titleList"></ul>
-      <h3>內容 (Content)</h3>
-      <ul id="contentList"></ul>
+      <h3>問題 (Questions)</h3>
+      <ul id="questionList"></ul>
+      <h3>回答 (Answers)</h3>
+      <ul id="answerList"></ul>
     </div>
     <script>
-      let isContentMode = false; // 初始為標題模式
+      let isAnswerMode = false; // 初始為問題模式
 
       // 取得開關與狀態顯示區域
       const modeToggle = document.getElementById("mode-toggle");
@@ -121,20 +123,20 @@
 
       // 監聽開關改變事件
       modeToggle.addEventListener("change", () => {
-        isContentMode = modeToggle.checked; // 當開關開啟時是內容模式，否則是標題模式
+        isAnswerMode = modeToggle.checked; // 當開關開啟時是答案模式，否則是問題模式
 
         // 更新顯示的模式
-        if (isContentMode) {
-          modeStatus.textContent = "目前是內容模式";
+        if (isAnswerMode) {
+          modeStatus.textContent = "目前是答案模式";
         } else {
-          modeStatus.textContent = "目前是標題模式";
+          modeStatus.textContent = "目前是問題模式";
         }
       });
 
       const upload = document.getElementById("fileInput");
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
-      const titleList = document.getElementById("titleList");
+      const questionList = document.getElementById("questionList");
       let img = new Image();
       let fields = [];
       let imgScale = 1;
@@ -145,10 +147,12 @@
       let startX, startY;
       let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
       let isDrawing = false;
+      let originalFileName = "result.png"; // 預設下載圖片名稱
 
       upload.addEventListener("change", (event) => {
         const file = event.target.files[0];
         if (file) {
+          originalFileName = file.name; // 儲存原始檔名
           const reader = new FileReader();
           reader.onload = function (e) {
             img.src = e.target.result;
@@ -158,11 +162,28 @@
       });
 
       img.onload = function () {
+        // 設定 canvas 實際大小為圖片原始大小
+        const originalWidth = img.naturalWidth;
+        const originalHeight = img.naturalHeight;
+
         const maxWidth = window.innerWidth * 0.7;
-        imgScale = maxWidth / img.width;
-        canvas.width = img.width * imgScale;
-        canvas.height = img.height * imgScale;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const imgScale = maxWidth / originalWidth; // 計算縮放比例
+
+        // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
+        canvas.width = originalWidth;
+        canvas.height = originalHeight;
+
+        // 根據縮放比例繪製圖片
+        ctx.drawImage(
+          img,
+          0,
+          0,
+          originalWidth * imgScale,
+          originalHeight * imgScale
+        );
+
+        // 在這裡繪製框線或文字等其他圖形
+        redrawCanvas();
       };
 
       // 當按下滑鼠時
@@ -313,22 +334,22 @@
 
           let inputValue = "";
 
-          // 根據模式來決定顯示標題或內容
-          if (!isContentMode) {
-            // 標題模式，讓用戶輸入欄位名稱
-            inputValue = prompt("請輸入標題名稱：");
-            mode = "title";
+          // 根據模式來決定顯示問題或答案
+          if (!isAnswerMode) {
+            // 問題模式，讓用戶輸入欄位名稱
+            inputValue = prompt("請輸入問題名稱：");
+            mode = "question";
           } else {
-            // 內容模式，讓用戶輸入欄位內容
-            inputValue = prompt("請輸入data內容：");
-            mode = "content";
+            // 答案模式，讓用戶輸入欄位答案
+            inputValue = prompt("請輸入data答案：");
+            mode = "answer";
           }
 
           // 如果有輸入，則保存框選區域並更新
           if (inputValue) {
             fields.push({
               mode: mode,
-              name: inputValue, // 根據模式，輸入的是標題或內容
+              name: inputValue, // 根據模式，輸入的是問題或答案
               x: Math.min(startX, x),
               y: Math.min(startY, y),
               width: Math.abs(x - startX),
@@ -382,71 +403,85 @@
         return null;
       }
 
-      function redrawCanvas() {
+      function redrawCanvas(showBox = true) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         ctx.lineWidth = 2;
 
         fields.forEach((f) => {
+          const x = f.x * canvas.width;
+          const y = f.y * canvas.height;
+          const w = f.width * canvas.width;
+          const h = f.height * canvas.height;
+
           // 根據 mode 設定不同顏色
-          ctx.strokeStyle = f.mode === "title" ? "red" : "green"; // title = 紅色框, content = 綠色框
-          ctx.strokeRect(
-            f.x * canvas.width,
-            f.y * canvas.height,
-            f.width * canvas.width,
-            f.height * canvas.height
-          );
+          if (showBox) {
+            ctx.strokeStyle = f.mode === "question" ? "red" : "green"; // question = 紅色框, answer = 綠色框
+            ctx.strokeRect(x, y, w, h);
 
-          // 顯示 Title（在框框上方）
-          if (f.mode === "title") {
-            ctx.fillStyle = "red";
-            ctx.font = "bold 14px Arial";
-            ctx.fillText(
-              f.name,
-              f.x * canvas.width,
-              Math.max(f.y * canvas.height - 5, 14) // 避免文字超出畫布
-            );
+            // 顯示 question（在框框上方）
+            if (f.mode === "question") {
+              ctx.fillStyle = "red";
+              ctx.font = "bold 14px Arial";
+              ctx.fillText(
+                f.name,
+                x,
+                Math.max(y - 5, 14) // 避免文字超出畫布
+              );
+            }
+
+            // 顯示 answer（在框框內）
+            if (f.mode === "answer") {
+              ctx.fillStyle = "green";
+              ctx.font = "22px Arial";
+              ctx.fillText(
+                f.name || "未填寫答案",
+                x + 5, // 稍微往右一點
+                y + 30 // 稍微往下，避免太靠邊
+              );
+            }
+
+            // 畫出四個角落的圓點（方便拖曳）
+
+            const cornerSize = 5;
+            ctx.fillStyle = "blue";
+            const corners = [
+              [f.x, f.y], // 左上
+              [f.x + f.width, f.y], // 右上
+              [f.x, f.y + f.height], // 左下
+              [f.x + f.width, f.y + f.height], // 右下
+            ];
+            corners.forEach(([cx, cy]) => {
+              ctx.beginPath();
+              ctx.arc(
+                cx * canvas.width,
+                cy * canvas.height,
+                cornerSize,
+                0,
+                Math.PI * 2
+              );
+              ctx.fill();
+            });
+          } else {
+            // 只畫 answer 的文字，不畫框、不畫 question、不畫角點
+            if (f.mode === "answer") {
+              ctx.fillStyle = "green";
+              ctx.font = "22px Arial";
+              ctx.fillText(
+                f.name || "未填寫答案",
+                f.x * canvas.width + 5,
+                f.y * canvas.height + 30
+              );
+            }
           }
-
-          // 顯示 Content（在框框內）
-          if (f.mode === "content") {
-            ctx.fillStyle = "green";
-            ctx.font = "22px Arial";
-            ctx.fillText(
-              f.name || "未填寫內容",
-              f.x * canvas.width + 5, // 稍微往右一點
-              f.y * canvas.height + 30 // 稍微往下，避免太靠邊
-            );
-          }
-
-          // 畫出四個角落的圓點（方便拖曳）
-          const cornerSize = 5;
-          ctx.fillStyle = "blue";
-          const corners = [
-            [f.x, f.y], // 左上
-            [f.x + f.width, f.y], // 右上
-            [f.x, f.y + f.height], // 左下
-            [f.x + f.width, f.y + f.height], // 右下
-          ];
-          corners.forEach(([cx, cy]) => {
-            ctx.beginPath();
-            ctx.arc(
-              cx * canvas.width,
-              cy * canvas.height,
-              cornerSize,
-              0,
-              Math.PI * 2
-            );
-            ctx.fill();
-          });
         });
       }
 
       // 更新欄位列表
       function updateFieldList() {
-        const contentList = document.getElementById("contentList");
-        titleList.innerHTML = "";
-        contentList.innerHTML = "";
+        const answerList = document.getElementById("answerList");
+        questionList.innerHTML = "";
+        answerList.innerHTML = "";
         fields.forEach((f, index) => {
           let li = document.createElement("li");
           li.textContent = `${f.name} (x: ${f.x.toFixed(2)}, y: ${f.y.toFixed(
@@ -475,10 +510,10 @@
           li.appendChild(editBtn);
           li.appendChild(deleteBtn);
           // 根據 mode 類型，加入對應的清單
-          if (f.mode === "title") {
-            titleList.appendChild(li);
-          } else if (f.mode === "content") {
-            contentList.appendChild(li);
+          if (f.mode === "question") {
+            questionList.appendChild(li);
+          } else if (f.mode === "answer") {
+            answerList.appendChild(li);
           }
         });
       }
@@ -611,6 +646,28 @@
         } else {
           img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
         }
+      }
+
+      function downloadImage() {
+        // 先用不顯示框框的方式重畫一次
+        redrawCanvas(false);
+
+        // 短暫延遲，確保畫面已重繪（有時圖片大或瀏覽器慢）
+        setTimeout(() => {
+          // 取得原始檔案名稱，並在其後添加 "_filled"
+          const fileNameWithoutExtension = originalFileName.replace(
+            /\.[^/.]+$/,
+            ""
+          );
+          const newFileName = `${fileNameWithoutExtension}_filled.png`;
+          const link = document.createElement("a");
+          link.download = newFileName;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+
+          // 再把原本的畫面畫回來（顯示框框）
+          redrawCanvas(true);
+        }, 100); // 100ms 延遲通常就夠用了
       }
     </script>
   </body>

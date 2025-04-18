@@ -17,7 +17,8 @@ Flask-Minify==0.37
 
 pymysql===1.1.1
 bcrypt===4.3.0
-openai===1.70.0
+inference-sdk===0.46.5
+openai===1.75.0
 requests===2.32.3
 # flask_mysqldb
 # psycopg2-binary
