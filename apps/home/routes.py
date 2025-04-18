@@ -12,10 +12,12 @@ from flask_login import login_required
 from jinja2 import TemplateNotFound
 import shutil
 import os
+import json
 import apps.home.gpt as gpt  # GPT 模組
 import apps.home.ocr as ocr  # OCR 模組
 import apps.home.filterOCR as filterOCR
 import apps.home.combineOCR as combineOCR
+import apps.home.ai as detect_answer
 
 
 @blueprint.route('/index')
@@ -75,7 +77,16 @@ def upload_image():
                 return jsonify({'error': f'OCR 處理錯誤: {str(e)}'}), 500
 
             filterOCR.process_ocr_result()
-            finalocr = combineOCR.process_matched_fields()
+            combineOCR.process_matched_fields()
+
+            # # 呼叫 detect_answer 模組
+            try:
+                detect_answer.detect_answers(file_path)
+            except Exception as e:
+                return jsonify({'error': f'Roboflow 處理錯誤: {str(e)}'}), 500
+
+            with open("output/3_matched_result.json", "r", encoding="utf-8") as f:
+                content = json.load(f)
 
             response_data = {
                 'filename': filename,
@@ -84,7 +95,7 @@ def upload_image():
                 'size_kb': round(file_size / 1024, 2),
                 'gpt_response': gpt_response,
                 'ocr_status': ocr_status,
-                'ocr_data': finalocr
+                'ocr_data': content
             }
 
             return jsonify(response_data)

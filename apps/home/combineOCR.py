@@ -20,13 +20,19 @@ def find_fields_in_ocr(ocr_data, form_fields):
                 break  # 找到就跳出
 
         if bounding_box:
+            x = bounding_box["x"]
+            y = bounding_box["y"]
+            w = bounding_box["width"]
+            h = bounding_box["height"]
             matched_fields.append({
-                "mode": "title",
+                "mode": "question",
                 "name": field,
-                "x": bounding_box["x"],
-                "y": bounding_box["y"],
-                "width": bounding_box["width"],
-                "height": bounding_box["height"]
+                "x": x,
+                "y": y,
+                "width": w,
+                "height": h,
+                "center_x": x + w / 2,
+                "center_y": y + h / 2
             })
 
     return matched_fields
