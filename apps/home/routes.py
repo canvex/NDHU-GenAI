@@ -122,7 +122,6 @@ def doc_upload():
             # 取得檔案類型
             file_type = file.content_type
             
-            
             # 建立新的檔案記錄
             new_file = Files(
                 file_name=filename,
