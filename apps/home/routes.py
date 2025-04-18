@@ -6,9 +6,11 @@ Copyright (c) 2019 - present AppSeed.us
 from apps.home import blueprint
 from flask import render_template, request, redirect, url_for, jsonify, current_app
 
-from flask import flash  # 如果還沒有導入
-from flask_login import login_required, current_user
-from flask_login import login_required
+from flask import send_file, flash, request
+from werkzeug.utils import secure_filename
+from io import BytesIO
+from flask_login import current_user, login_required
+
 from jinja2 import TemplateNotFound
 import shutil
 import os
@@ -92,9 +94,13 @@ def upload_image():
 
     return jsonify({'error': 'Upload failed'}), 500
 
-# 文件上傳
+from flask import send_file
+from io import BytesIO
+from sqlalchemy import or_
+
+# 檔案上傳 (你已經有部分實現，這裡是完整版)
 @blueprint.route('/doc_upload', methods=['GET', 'POST'])
-@login_required  # 確保使用者已登入
+@login_required
 def doc_upload():
     if request.method == 'POST':
         if 'file' not in request.files:
@@ -108,44 +114,38 @@ def doc_upload():
             return redirect(url_for('home_blueprint.doc_upload'))
         
         if file:
-            from werkzeug.utils import secure_filename
-            from flask_login import current_user
-            from apps import db
-            from apps.authentication.models import Files
-            
-            # 處理檔案安全名稱
-            filename = secure_filename(file.filename)
-            # 讀取檔案內容
-            file_data = file.read()
-            # 取得檔案大小
-            file_size = len(file_data)
-            # 取得檔案類型
-            file_type = file.content_type
-            
-            # 建立新的檔案記錄
-            new_file = Files(
-                file_name=filename,
-                file_type=file_type,
-                file_size=file_size,
-                file_data=file_data,
-                user_id=current_user.id if current_user.is_authenticated else None
-            )
-            
             try:
-                # 儲存到資料庫
+                # 讀取檔案內容
+                file_data = file.read()
+                
+                # 檢查檔案大小 (例如限制10MB)
+                max_size = 10 * 1024 * 1024  # 10MB
+                if len(file_data) > max_size:
+                    flash('檔案大小超過10MB限制', 'danger')
+                    return redirect(url_for('home_blueprint.doc_upload'))
+                
+                # 創建新的檔案記錄
+                new_file = Files(
+                    file_name=secure_filename(file.filename),
+                    file_type=file.content_type,
+                    file_size=len(file_data),
+                    file_data=file_data,
+                    user_id=current_user.id
+                )
+                
                 db.session.add(new_file)
                 db.session.commit()
                 flash('檔案上傳成功', 'success')
                 return redirect(url_for('home_blueprint.doc_select'))
+                
             except Exception as e:
                 db.session.rollback()
                 flash(f'檔案上傳失敗: {str(e)}', 'danger')
                 return redirect(url_for('home_blueprint.doc_upload'))
-
-    return render_template('home/doc_upload.html', segment='doc_upload')
+    
+    return render_template('home/doc_upload.html')
 
 # 文件選取
-
 
 @blueprint.route('/doc_select', methods=['GET', 'POST'])
 def doc_select():
