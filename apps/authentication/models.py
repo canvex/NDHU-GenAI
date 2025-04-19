@@ -45,6 +45,8 @@ class Files(db.Model):
     file_size = db.Column(db.Integer, nullable=False)
     file_data = db.Column(db.LargeBinary, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='SET NULL'), nullable=True)
+    upload_time = db.Column(db.DateTime, default=datetime.utcnow)  # 新增上传时间
+    original_name = db.Column(db.String(255))  # 保留原始文件名
     
     def __init__(self, **kwargs):
         for property, value in kwargs.items():
@@ -52,7 +54,6 @@ class Files(db.Model):
     
     def __repr__(self):
         return f'<File {self.file_name}>'
-
 
 @login_manager.user_loader
 def user_loader(id):

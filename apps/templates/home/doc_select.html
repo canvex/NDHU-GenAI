@@ -131,24 +131,21 @@
               </div>
               <!-- /.card-header -->
               <!-- form start -->
-              <form>
+              <form id="uploadForm" onsubmit="return false;"> <!-- 阻止表單自動提交 -->
                 <div class="card-body">
                  </div>
-                  <div class="form-group">
-                    <label for="fileInput">File input</label>
-                    <div class="input-group">
-                      <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="fileInput">
-                        <label class="custom-file-label" for="fileInput">Choose file</label>
-                      </div>
-                      <div class="input-group-append">
-                        <!-- <span class="input-group-text" >Upload</span> -->
-                        <span class="input-group-text"  onclick="uploadImage()">Upload</span>
-
-                        
-                      </div>
+                 <div class="form-group">
+                  <label for="fileInput">File input</label>
+                  <div class="input-group">
+                    <div class="custom-file">
+                      <input type="file" class="custom-file-input" id="fileInput" name="file">
+                      <label class="custom-file-label" for="fileInput">Choose file</label>
                     </div>
-                  </div>
+                    <div class="input-group-append">
+                      <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
+                    </div>
+                  </div>                    
+                </div>
                      
 
                         <!-- <input type="file" id="fileInput" accept="image/*" />
@@ -175,15 +172,7 @@
                         </div>
                         <pre id="output"></pre>
                         <canvas id="canvas" ></canvas>
-               
-                    
-                    <div class="input-group-append">
-                      
-                      <span class="input-group-text" onclick="uploadImage()" >Upload</span>
-                    
-                    </div>
-                  
-                
+                              
                 <!-- /.card-body -->
 
                 <div class="card-footer">
@@ -210,6 +199,39 @@
     <!-- /.content -->
   </div>
   <script>
+    
+    async function uploadImage() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert('請先選擇檔案');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch("/doc_select", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('✅ 上傳成功：' + data.file_name);
+      } else {
+        alert('❌ 上傳失敗：' + (data.error || '未知錯誤'));
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('⚠️ 發生錯誤，請稍後再試');
+    }
+  }
+    
     let isContentMode = false; // 初始為標題模式
 
     // 取得開關與狀態顯示區域
