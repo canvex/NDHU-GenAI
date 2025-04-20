@@ -39,7 +39,7 @@ def bounding():
     return render_template('home/bounding_box.html')
 
 # 允許的文件類型
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 @blueprint.route('/upload', methods=['POST'])
 @login_required  # 確保使用者已登入
@@ -208,31 +208,7 @@ def doc_select():
         current_app.logger.error(f'Upload failed: {str(e)}', exc_info=True)
         return jsonify({'error': 'Server error during upload'}), 500
     
-    print('🔥 收到請求 method:', request.method)  # ← 第一層：有沒有進來 POST
-
-    if request.method == 'POST':
-        print('🧾 request.files:', request.files)     # ← 看看有沒有檔案
-        print('📦 request.form:', request.form)       # ← 有沒有表單欄位
-        print('🗂 request.data:', request.data)        # ← 是否為空
-
-        if 'file' not in request.files:
-            return jsonify({'success': False, 'error': 'No file part'})
-
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'success': False, 'error': 'No selected file'})
-
-        # ✅ 寫入磁碟（簡單測試）
-        filepath = os.path.join('uploads', file.filename)
-        file.save(filepath)
-        print(f'✅ 檔案儲存成功: {filepath}')
-
-        # ✅ 寫入資料庫（你可以先註解掉資料庫部分測試有沒有寫入磁碟）
-        # new_file = File(filename=file.filename, ...)
-        # db.session.add(new_file)
-        # db.session.commit()
-
-        return jsonify({'success': True, 'file_name': file.filename})
+    
 
     # GET 方法處理
     return render_template('home/doc_select.html')
