@@ -5,7 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>圖片上傳</title>
     <style>
-      /* 加入 loading 動畫樣式 */
+      /*右鍵選單*/
+      #contextMenu {
+        background: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        padding: 5px;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      #contextMenu div {
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+
+      #contextMenu div:hover {
+        background: #f0f0f0;
+      }
+
       /* 加入 loading 動畫樣式 */
       #loading {
         display: none;
@@ -99,6 +117,24 @@
         <input type="checkbox" id="mode-toggle" />
         <span id="mode-status">目前是問題模式</span>
       </div>
+      <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
+
+      <!-- 右鍵選單 -->
+      <ul
+        id="contextMenu"
+        style="
+          display: none;
+          position: absolute;
+          background: white;
+          border: 1px solid gray;
+          padding: 5px;
+        "
+      >
+        <div id="editBtn">✏️ 編輯</div>
+        <div id="deleteBtn">🗑️ 刪除</div>
+        <li>自動填入答案：</li>
+        <ul id="answerOptions" style="padding-left: 15px"></ul>
+      </ul>
 
       <div id="loading">
         <div class="spinner"></div>
@@ -148,6 +184,7 @@
       let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
       let isDrawing = false;
       let originalFileName = "result.png"; // 預設下載圖片名稱
+      const answerCandidates = ["張小明", "資工組", "411121340"]; //暫時測試資料
 
       upload.addEventListener("change", (event) => {
         const file = event.target.files[0];
@@ -377,6 +414,102 @@
         canvas.removeEventListener("mousemove", onMouseMove);
         redrawCanvas(); // 重新繪製畫布，顯示更新後的框選區域
       });
+
+      const contextMenu = document.getElementById("contextMenu");
+      selectedField = null; // 用來記錄目前選中的框框
+
+      // 右鍵選單顯示邏輯
+      canvas.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+
+        const box = getBoxAtMousePosition(e); // 你之前寫好的判斷框框的函式
+        if (box) {
+          selectedField = box; // 設定選中的框框
+          // 顯示選單
+          contextMenu.style.top = `${e.pageY}px`;
+          contextMenu.style.left = `${e.pageX}px`;
+          contextMenu.style.display = "block"; // ==== 這段是重點：如果是 answer 類型，顯示選項 ====
+          const answerList = document.getElementById("answerOptions");
+          answerList.innerHTML = "";
+
+          if (box.mode === "answer") {
+            answerCandidates.forEach((text) => {
+              const li = document.createElement("li");
+              li.textContent = text;
+              li.style.cursor = "pointer";
+              li.addEventListener("click", () => {
+                box.name = text;
+                updateFieldList();
+                redrawCanvas();
+                contextMenu.style.display = "none";
+              });
+              answerList.appendChild(li);
+            });
+          }
+        } else {
+          contextMenu.style.display = "none";
+        }
+      });
+
+      // 編輯按鈕事件
+      document.getElementById("editBtn").addEventListener("click", () => {
+        if (selectedField) {
+          const newName = prompt("請輸入新的標籤文字", selectedField.name); // 提示輸入新的名稱
+          if (newName !== null && newName.trim() !== "") {
+            selectedField.name = newName.trim(); // 更新名稱
+            updateFieldList(); // 更新右側列表
+            redrawCanvas(); // 重繪畫布
+          }
+        }
+        contextMenu.style.display = "none"; // 隱藏右鍵選單
+      });
+
+      // 刪除按鈕事件
+      document.getElementById("deleteBtn").addEventListener("click", () => {
+        if (selectedField) {
+          const index = fields.indexOf(selectedField); // 找到被選中的框框在 `fields` 中的索引
+          if (index !== -1) {
+            fields.splice(index, 1); // 刪除框框
+            updateFieldList(); // 更新右側列表
+            redrawCanvas(); // 重繪畫布
+          }
+        }
+        contextMenu.style.display = "none"; // 隱藏右鍵選單
+      });
+
+      // 點擊其他地方時隱藏選單
+      document.addEventListener("click", (e) => {
+        if (!contextMenu.contains(e.target)) {
+          contextMenu.style.display = "none";
+        }
+      });
+
+      function getBoxAtMousePosition(e) {
+        const rect = canvas.getBoundingClientRect();
+
+        // canvas 寬高縮放後，轉換成 0~1 區間的比例座標
+        const x = (e.clientX - rect.left) / canvas.width;
+        const y = (e.clientY - rect.top) / canvas.height;
+
+        return fields.find(
+          (f) =>
+            x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+        );
+      }
+
+      let selectedBoxId = null; // 記錄目前被選到的 box
+
+      function showContextMenu(x, y, boxId) {
+        selectedBoxId = boxId;
+        const menu = document.getElementById("contextMenu");
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.style.display = "block";
+      }
+
+      function hideContextMenu() {
+        document.getElementById("contextMenu").style.display = "none";
+      }
 
       // 根據鼠標點擊的位置判斷是否點擊到角落
       function getResizeCorner(x, y, field) {

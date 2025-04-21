@@ -37,7 +37,7 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
         {
             "id": f"a{idx}",  # 新增 id 欄位，以 a 開頭
             "mode": "answer",
-            "name": idx + 1,
+            "name": idx,
             "x": pred["x"] - pred["width"] / 2,
             "y": pred["y"] - pred["height"] / 2,
             "width": pred["width"],
