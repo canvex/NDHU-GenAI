@@ -40,10 +40,98 @@ def bounding():
 
 # 允許的文件類型
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@blueprint.route('/upload', methods=['POST'])
+@blueprint.route('/upload', methods=['POST']) 
 @login_required  # 確保使用者已登入
-def upload_image():
+def upload_image():  
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'}), 400
+
+    if file:
+        try:
+            # 取得 UPLOAD_FOLDER 目錄
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+
+            # 如果 uploads 目錄不存在，則創建
+            if not os.path.exists(upload_folder):
+                os.makedirs(upload_folder)
+
+            filename = file.filename
+            file_path = os.path.join(
+                current_app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+
+            # 取得圖片資訊
+            # img = Image.open(file_path)
+            # width, height = img.size
+            file_size = os.path.getsize(file_path)
+            # shutil.rmtree("./output/")
+            clear_output_folder()
+
+            # 執行 GPT
+            try:
+                gpt_response = gpt.extract_fields_from_image(file_path)
+            except Exception as e:
+                return jsonify({'error': f'GPT 解析錯誤: {str(e)}'}), 500
+
+            # 執行 OCR
+            try:
+                ocr_status = ocr.ocr_space_file(
+                    file_path, output_json='output/1_ocr_result.json', language='cht')
+            except Exception as e:
+                return jsonify({'error': f'OCR 處理錯誤: {str(e)}'}), 500
+
+            filterOCR.process_ocr_result()
+            combineOCR.process_matched_fields()
+
+            # # 呼叫 detect_answer 模組
+            try:
+                detect_answer.detect_answers(file_path)
+            except Exception as e:
+                return jsonify({'error': f'Roboflow 處理錯誤: {str(e)}'}), 500
+
+            with open("output/3_matched_result.json", "r", encoding="utf-8") as f:
+                content = json.load(f)
+
+            response_data = {
+                'filename': filename,
+                # 'width': width,
+                # 'height': height,
+                'size_kb': round(file_size / 1024, 2),
+                'gpt_response': gpt_response,
+                'ocr_status': ocr_status,
+                'ocr_data': content
+            }
+
+            return jsonify(response_data)
+
+        except Exception as e:
+            return jsonify({'error': f'上傳處理錯誤: {str(e)}'}), 500
+
+    return jsonify({'error': 'Upload failed'}), 500
+
+
+# 這段要保留
+@blueprint.route('/doc_upload', methods=['GET', 'POST'])
+@login_required  # 確保使用者已登入
+def doc_upload():
+    if request.method == 'POST':
+        some_input = request.form.get('some_input')
+        return redirect(url_for('home/blueprint.doc_download'))  # 确保正确的路由
+    
+    return render_template('home/doc_upload.html', segment='doc_upload')
+
+
+# 文件上傳
+@blueprint.route('/doc_select', methods=['POST'])
+def doc_select():
     if current_user.is_authenticated:
         user_id = current_user.id
     else:
@@ -128,94 +216,7 @@ def upload_image():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': f'伺服器錯誤: {str(e)}'}), 500
-
-
-# 文件上傳
-@blueprint.route('/doc_upload', methods=['GET', 'POST'])
-@login_required  # 確保使用者已登入
-def doc_upload():
-    if request.method == 'POST':
-        some_input = request.form.get('some_input')
-        return redirect(url_for('home/blueprint.doc_download'))  # 确保正确的路由
     
-    return render_template('home/doc_upload.html', segment='doc_upload')
-
-
-# 文件選取
-
-
-
-@blueprint.route('/doc_select', methods=['POST'])
-def doc_select():
-    # 检查用户是否登录（如果需要）
-    if current_user.is_authenticated:
-        user_id = current_user.id
-    else:
-        user_id = None
-    
-    # 检查请求是否包含文件
-    if 'file' not in request.files:
-        current_app.logger.error('No file part in request')
-        return jsonify({'error': 'No file uploaded'}), 400
-    
-    file = request.files['file']
-    
-    # 检查是否选择了文件
-    if file.filename == '':
-        current_app.logger.error('Empty filename')
-        return jsonify({'error': 'No file selected'}), 400
-    
-    # 检查文件类型
-    if not allowed_file(file.filename):
-        current_app.logger.error(f'Invalid file type: {file.filename}')
-        return jsonify({'error': 'File type not allowed'}), 400
-    
-    try:
-        # 读取文件内容
-        file_data = file.read()
-        
-        # 检查文件大小（例如限制10MB）
-        max_size = 10 * 1024 * 1024  # 10MB
-        if len(file_data) > max_size:
-            return jsonify({'error': 'File size exceeds 10MB limit'}), 400
-        
-        # 安全处理文件名
-        filename = secure_filename(file.filename)
-        
-        # 创建文件记录
-        new_file = Files(
-            file_name=filename,
-            original_name=file.filename,  # 保存原始文件名
-            file_type=filename.rsplit('.', 1)[1].lower(),
-            file_size=len(file_data),
-            file_data=file_data,
-            user_id=user_id
-        )
-        
-        db.session.add(new_file)
-        db.session.commit()
-        
-        current_app.logger.info(f'File uploaded successfully: {filename}')
-        return jsonify({
-            'success': True,
-            'message': 'File uploaded successfully',
-            'file_id': new_file.id,
-            'file_name': new_file.file_name
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f'Upload failed: {str(e)}', exc_info=True)
-        return jsonify({'error': 'Server error during upload'}), 500
-    
-    
-
-    # GET 方法處理
-    return render_template('home/doc_select.html')
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # 文件填寫
