@@ -9,7 +9,7 @@ def find_fields_in_ocr(ocr_data, form_fields):
     """在 OCR 結果中找到對應的表單欄位，並返回格式化結果"""
     matched_fields = []
 
-    for field in form_fields:
+    for idx, field in enumerate(form_fields):
         field_words = field.replace(" ", "")  # 移除空格，確保匹配時不受影響
         bounding_box = None
 
@@ -20,13 +20,20 @@ def find_fields_in_ocr(ocr_data, form_fields):
                 break  # 找到就跳出
 
         if bounding_box:
+            x = bounding_box["x"]
+            y = bounding_box["y"]
+            w = bounding_box["width"]
+            h = bounding_box["height"]
             matched_fields.append({
-                "mode": "title",
+                "id": f"q{idx}",  # 加上 q 開頭的 id
+                "mode": "question",
                 "name": field,
-                "x": bounding_box["x"],
-                "y": bounding_box["y"],
-                "width": bounding_box["width"],
-                "height": bounding_box["height"]
+                "x": x,
+                "y": y,
+                "width": w,
+                "height": h,
+                "center_x": x + w / 2,
+                "center_y": y + h / 2
             })
 
     return matched_fields

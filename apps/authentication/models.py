@@ -3,6 +3,7 @@
 Copyright (c) 2019 - present AppSeed.us
 """
 
+from datetime import datetime
 from flask_login import UserMixin
 
 from apps import db, login_manager
@@ -34,6 +35,25 @@ class Users(db.Model, UserMixin):
     def __repr__(self):
         return str(self.username)
 
+
+class Files(db.Model):
+    __tablename__ = 'files'
+    
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    file_name = db.Column(db.String(255), nullable=False)
+    file_type = db.Column(db.String(50), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)
+    file_data = db.Column(db.LargeBinary, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='SET NULL'), nullable=True)
+    upload_time = db.Column(db.DateTime, default=datetime.utcnow)  # 新增上传时间
+    original_name = db.Column(db.String(255))  # 保留原始文件名
+    
+    def __init__(self, **kwargs):
+        for property, value in kwargs.items():
+            setattr(self, property, value)
+    
+    def __repr__(self):
+        return f'<File {self.file_name}>'
 
 @login_manager.user_loader
 def user_loader(id):
