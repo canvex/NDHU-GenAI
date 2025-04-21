@@ -45,8 +45,9 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
             "center_x": pred["x"],
             "center_y": pred["y"]
         }
-        for idx, pred in enumerate(res["predictions"])
-        if pred["class"] == "answer"
+        for idx, pred in enumerate(
+            [p for p in res["predictions"] if p["class"] == "answer"]
+        )
     ]
     # print(filtered_results)
 

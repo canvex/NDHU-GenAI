@@ -3,7 +3,7 @@ import os
 
 # 容忍範圍
 TOP_THRESHOLD = 10  # 允許的行高誤差（像素）
-GAP_THRESHOLD = 200  # 同一行內，詞與詞之間的最大間隔（像素）
+GAP_THRESHOLD = 10  # 同一行內，詞與詞之間的最大間隔（像素）
 
 
 def merge_text_lines(ocr_data):
