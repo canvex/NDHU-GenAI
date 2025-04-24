@@ -1,0 +1,660 @@
+{% extends "layouts/base.html" %}
+
+{% block title %} Forms General {% endblock %} 
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} sidebar-mini {% endblock body_class %} 
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/static/assets/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/static/assets/css/adminlte.min.css">
+
+{% endblock stylesheets %}
+
+
+{% block content %}    
+
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+{#            <h1>Upload Form</h1>#}
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">Home</a></li>
+              <li class="breadcrumb-item">Upload Form</li>
+                <li class="breadcrumb-item active">select</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content" >
+      <div class="container-fluid">
+        <!-- s<div class="row"> -->
+          <!-- left column -->
+           
+
+          <!-- <div class="col-md-10"> -->
+            <!-- general form elements -->
+            <!-- <div class="card card-primary"> -->
+              <!-- <div class="card-header">
+                <h3 class="card-title">請選取標籤</h3>
+              </div> -->
+              <!-- /.card-header -->
+              <!-- form start -->
+              <form id="uploadForm" onsubmit="return false;"> <!-- 阻止表單自動提交 -->
+                <div class="card-body">
+                 </div>
+                 <div class="form-group">
+                  <label for="fileInput">File input</label>
+                  <div class="input-group">
+                    <div class="custom-file">
+                      <input type="file" class="custom-file-input" id="fileInput" name="file">
+                      <label class="custom-file-label" for="fileInput">Choose file</label>
+                    </div>
+                    <div class="input-group-append">
+                      <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
+                    </div>
+                  </div>                    
+                </div>
+                     
+
+               
+                  
+                       
+                              
+                <!-- /.card-body -->
+
+                <div class="card-footer">
+                  <a href="{{ url_for('home_blueprint.doc_fill') }}" class="btn btn-primary float-sm-right">
+                    確認
+                </a>
+
+                </div>
+              </form>
+            </div>
+            <!-- /.card -->
+
+            <!-- Form Element sizes -->
+
+
+
+            <!-- Input addon -->
+
+          <!--/.col (right) -->
+        </div>
+        <!-- /.row -->
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <script>
+    
+    async function uploadImage() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (!file) {
+      alert('請先選擇檔案');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch("/doc_select", {
+        method: "POST",
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert('✅ 上傳成功：' + data.file_name);
+      } else {
+        alert('❌ 上傳失敗：' + (data.error || '未知錯誤'));
+      }
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('⚠️ 發生錯誤，請稍後再試');
+    }
+  }
+    
+    let isContentMode = false; // 初始為標題模式
+
+    // 取得開關與狀態顯示區域
+    const modeToggle = document.getElementById("mode-toggle");
+    const modeStatus = document.getElementById("mode-status");
+
+    // 監聽開關改變事件
+    modeToggle.addEventListener("change", () => {
+      isContentMode = modeToggle.checked; // 當開關開啟時是內容模式，否則是標題模式
+
+      // 更新顯示的模式
+      if (isContentMode) {
+        modeStatus.textContent = "目前是內容模式";
+      } else {
+        modeStatus.textContent = "目前是標題模式";
+      }
+    });
+
+    const upload = document.getElementById("fileInput");
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const titleList = document.getElementById("titleList");
+    let img = new Image();
+    let fields = [];
+    let imgScale = 1;
+    let selectedField = null;
+    let isDragging = false;
+    let isResizing = false;
+    let dragOffsetX, dragOffsetY;
+    let startX, startY;
+    let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
+    let isDrawing = false;
+
+    upload.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    img.onload = function () {
+      const maxWidth = window.innerWidth * 0.7;
+      imgScale = maxWidth / img.width;
+      canvas.width = img.width * imgScale;
+      canvas.height = img.height * imgScale;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    };
+
+    // 當按下滑鼠時
+    canvas.addEventListener("mousedown", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / canvas.width;
+      const y = (e.clientY - rect.top) / canvas.height;
+
+      selectedField = fields.find(
+        (f) =>
+          x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+      );
+
+      if (selectedField) {
+        // 檢查是否點擊到四個角落
+        resizeCorner = getResizeCorner(x, y, selectedField);
+        if (resizeCorner) {
+          isResizing = true;
+        } else {
+          isDragging = true;
+          dragOffsetX = x - selectedField.x;
+          dragOffsetY = y - selectedField.y;
+        }
+        canvas.addEventListener("mousemove", onMouseMove);
+      } else {
+        // 開始繪製新的框選區域
+        startX = x;
+        startY = y;
+        isDrawing = true;
+      }
+    });
+
+    // 當滑鼠移動時
+    canvas.addEventListener("mousemove", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / canvas.width;
+      const y = (e.clientY - rect.top) / canvas.height;
+
+      // 檢查是否滑鼠懸停在框選區域上
+      const hoveredField = fields.find(
+        (f) =>
+          x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
+      );
+
+      if (hoveredField) {
+        canvas.style.cursor = "pointer"; // 當滑鼠懸停在框選區域上，顯示可拖曳游標
+      } else {
+        canvas.style.cursor = "crosshair"; // 否則，恢復預設游標
+      }
+
+      if (isDrawing) {
+        redrawCanvas();
+        ctx.strokeStyle = "blue";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          startX * canvas.width,
+          startY * canvas.height,
+          (x - startX) * canvas.width,
+          (y - startY) * canvas.height
+        );
+      } else if (isDragging && selectedField) {
+        // 拖曳框選
+        selectedField.x = x - dragOffsetX;
+        selectedField.y = y - dragOffsetY;
+        redrawCanvas();
+      } else if (isResizing && selectedField && resizeCorner) {
+        // 根據選擇的角落來調整大小
+        switch (resizeCorner) {
+          case "topLeft":
+            // 更新左上角大小，並確保寬度和高度為正數
+            selectedField.width += selectedField.x - x;
+            selectedField.height += selectedField.y - y;
+            selectedField.x = x;
+            selectedField.y = y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x - selectedField.width;
+              selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+          case "topRight":
+            // 更新右上角大小
+            selectedField.width = x - selectedField.x;
+            selectedField.height += selectedField.y - y;
+            selectedField.y = y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+
+            // 偵測是否有反轉，如果是，就切換為右下角
+            if (selectedField.height < 0) {
+              resizeCorner = "bottomRight";
+            }
+            break;
+          case "bottomLeft":
+            // 更新左下角大小
+            selectedField.width += selectedField.x - x;
+            selectedField.height = y - selectedField.y;
+            selectedField.x = x;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+          case "bottomRight":
+            // 更新右下角大小
+            selectedField.width = x - selectedField.x;
+            selectedField.height = y - selectedField.y;
+            // 確保寬度和高度是正數
+            if (selectedField.width < 0) {
+              selectedField.x = x + selectedField.width;
+              selectedField.width = -selectedField.width;
+            }
+            if (selectedField.height < 0) {
+              selectedField.y = y + selectedField.height;
+              selectedField.height = -selectedField.height;
+            }
+            break;
+        }
+
+        // 重新繪製畫布，更新框選區域
+        redrawCanvas();
+      }
+      updateFieldList();
+    });
+
+    // 當滑鼠放開時
+    canvas.addEventListener("mouseup", (e) => {
+      if (isDrawing) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / canvas.width;
+        const y = (e.clientY - rect.top) / canvas.height;
+
+        let inputValue = "";
+
+        // 根據模式來決定顯示標題或內容
+        if (!isContentMode) {
+          // 標題模式，讓用戶輸入欄位名稱
+          inputValue = prompt("請輸入標題名稱：");
+          mode = "title";
+        } else {
+          // 內容模式，讓用戶輸入欄位內容
+          inputValue = prompt("請輸入data內容：");
+          mode = "content";
+        }
+
+        // 如果有輸入，則保存框選區域並更新
+        if (inputValue) {
+          fields.push({
+            mode: mode,
+            name: inputValue, // 根據模式，輸入的是標題或內容
+            x: Math.min(startX, x),
+            y: Math.min(startY, y),
+            width: Math.abs(x - startX),
+            height: Math.abs(y - startY),
+          });
+          updateFieldList();
+        }
+
+        isDrawing = false;
+      }
+
+      // 結束拖曳、調整大小的狀態
+      isDragging = false;
+      isResizing = false;
+      resizeCorner = null;
+      selectedField = null;
+
+      canvas.removeEventListener("mousemove", onMouseMove);
+      redrawCanvas(); // 重新繪製畫布，顯示更新後的框選區域
+    });
+
+    // 根據鼠標點擊的位置判斷是否點擊到角落
+    function getResizeCorner(x, y, field) {
+      const cornerThreshold = 10; // 邊界距離臨界值
+      const left = field.x * canvas.width;
+      const top = field.y * canvas.height;
+      const right = (field.x + field.width) * canvas.width;
+      const bottom = (field.y + field.height) * canvas.height;
+
+      if (
+        Math.abs(x * canvas.width - left) < cornerThreshold &&
+        Math.abs(y * canvas.height - top) < cornerThreshold
+      ) {
+        return "topLeft";
+      } else if (
+        Math.abs(x * canvas.width - right) < cornerThreshold &&
+        Math.abs(y * canvas.height - top) < cornerThreshold
+      ) {
+        return "topRight";
+      } else if (
+        Math.abs(x * canvas.width - left) < cornerThreshold &&
+        Math.abs(y * canvas.height - bottom) < cornerThreshold
+      ) {
+        return "bottomLeft";
+      } else if (
+        Math.abs(x * canvas.width - right) < cornerThreshold &&
+        Math.abs(y * canvas.height - bottom) < cornerThreshold
+      ) {
+        return "bottomRight";
+      }
+      return null;
+    }
+
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.lineWidth = 2;
+
+      fields.forEach((f) => {
+        // 根據 mode 設定不同顏色
+        ctx.strokeStyle = f.mode === "title" ? "red" : "green"; // title = 紅色框, content = 綠色框
+        ctx.strokeRect(
+          f.x * canvas.width,
+          f.y * canvas.height,
+          f.width * canvas.width,
+          f.height * canvas.height
+        );
+
+        // 顯示 Title（在框框上方）
+        if (f.mode === "title") {
+          ctx.fillStyle = "red";
+          ctx.font = "bold 14px Arial";
+          ctx.fillText(
+            f.name,
+            f.x * canvas.width,
+            Math.max(f.y * canvas.height - 5, 14) // 避免文字超出畫布
+          );
+        }
+
+        // 顯示 Content（在框框內）
+        if (f.mode === "content") {
+          ctx.fillStyle = "green";
+          ctx.font = "22px Arial";
+          ctx.fillText(
+            f.name || "未填寫內容",
+            f.x * canvas.width + 5, // 稍微往右一點
+            f.y * canvas.height + 30 // 稍微往下，避免太靠邊
+          );
+        }
+
+        // 畫出四個角落的圓點（方便拖曳）
+        const cornerSize = 5;
+        ctx.fillStyle = "blue";
+        const corners = [
+          [f.x, f.y], // 左上
+          [f.x + f.width, f.y], // 右上
+          [f.x, f.y + f.height], // 左下
+          [f.x + f.width, f.y + f.height], // 右下
+        ];
+        corners.forEach(([cx, cy]) => {
+          ctx.beginPath();
+          ctx.arc(
+            cx * canvas.width,
+            cy * canvas.height,
+            cornerSize,
+            0,
+            Math.PI * 2
+          );
+          ctx.fill();
+        });
+      });
+    }
+
+    // 更新欄位列表
+    function updateFieldList() {
+      const contentList = document.getElementById("contentList");
+      titleList.innerHTML = "";
+      contentList.innerHTML = "";
+      fields.forEach((f, index) => {
+        let li = document.createElement("li");
+        li.textContent = `${f.name} (x: ${f.x.toFixed(2)}, y: ${f.y.toFixed(
+          2
+        )})`;
+        // 編輯名稱按鈕
+        let editBtn = document.createElement("button");
+        editBtn.textContent = "編輯";
+        editBtn.onclick = () => {
+          let newName = prompt("請輸入新的名稱：", f.name);
+          if (newName !== null && newName.trim() !== "") {
+            fields[index].name = newName.trim();
+            updateFieldList();
+            redrawCanvas();
+          }
+        };
+
+        // 刪除按鈕
+        let deleteBtn = document.createElement("button");
+        deleteBtn.textContent = "刪除";
+        deleteBtn.onclick = () => {
+          fields.splice(index, 1);
+          updateFieldList();
+          redrawCanvas();
+        };
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        // 根據 mode 類型，加入對應的清單
+        if (f.mode === "title") {
+          titleList.appendChild(li);
+        } else if (f.mode === "content") {
+          contentList.appendChild(li);
+        }
+      });
+    }
+    // 匯出框選資料
+    function exportData() {
+      const absoluteFields = fields.map((f) => ({
+        mode: f.mode, // 修正這裡，確保每個框都有自己的模式
+        name: f.name,
+        x: Math.round(f.x * img.width),
+        y: Math.round(f.y * img.height),
+        width: Math.round(f.width * img.width),
+        height: Math.round(f.height * img.height),
+      }));
+
+      const dataStr =
+        "data:text/json;charset=utf-8," +
+        encodeURIComponent(JSON.stringify(absoluteFields, null, 2));
+      const downloadAnchor = document.createElement("a");
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "bounding_boxes.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // 匯入框選資料
+    function importData(event) {
+      const file = event.target.files[0];
+
+      // 確保即使選擇相同的檔案也會觸發 change 事件
+      event.target.value = "";
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          try {
+            const importedFields = JSON.parse(e.target.result);
+
+            if (!img.complete) {
+              img.onload = () =>
+                updateFieldsWithRelativeCoordinates(importedFields);
+            } else {
+              updateFieldsWithRelativeCoordinates(importedFields);
+            }
+          } catch (error) {
+            alert("無法解析 JSON 檔案");
+          }
+        };
+        reader.readAsText(file);
+      }
+    }
+
+    function updateFieldsWithRelativeCoordinates(importedFields) {
+      fields = importedFields.map((f) => ({
+        ...f,
+        x: f.x / img.width,
+        y: f.y / img.height,
+        width: f.width / img.width,
+        height: f.height / img.height,
+      }));
+      updateFieldList();
+      redrawCanvas();
+    }
+
+    document
+      .getElementById("importBtn")
+      .addEventListener("change", importData, false);
+    document
+      .getElementById("exportBtn")
+      .addEventListener("click", exportData, false);
+
+    function uploadImage() {
+      let fileInput = document.getElementById("fileInput").files[0];
+      if (!fileInput) {
+        alert("請選擇圖片");
+        return;
+      }
+
+      let formData = new FormData();
+      formData.append("file", fileInput);
+
+      // 顯示 loading 動畫
+      document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
+      document.getElementById("output").textContent = ""; // 清空之前的結果
+
+      fetch("/doc_select", {
+        method: "POST",
+        body: formData,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          // 隱藏 loading 動畫
+          document.getElementById("loading").style.display = "none";
+
+          // 檢查是否有錯誤訊息
+          if (data.error) {
+            alert("錯誤: " + data.error); // 顯示錯誤訊息
+          } else {
+            try {
+              console.log("調用 handleApiResponse 之前的資料:", data);
+              handleApiResponse(data); // 🔹 呼叫處理函式
+              // document.getElementById("output").textContent = JSON.stringify(
+              //   data,
+              //   null,
+              //   2
+              // ); // 顯示 JSON 結果
+            } catch (error) {
+              console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
+              alert("處理回應時發生錯誤，請查看 Console 訊息！");
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("錯誤:", error);
+          // 隱藏 loading 動畫
+          document.getElementById("loading").style.display = "none";
+          alert("上傳失敗，請稍後再試！");
+        });
+    }
+    function handleApiResponse(data) {
+      console.log("🔹 API 回應:", data);
+
+      if (data.error) {
+        alert("❌ 錯誤：" + data.error);
+        return;
+      }
+
+      if (data.ocr_data && img.complete) {
+        updateFieldsWithRelativeCoordinates(data.ocr_data);
+      } else {
+        img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
+      }
+    }
+  </script>
+  
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+  <!-- jQuery -->
+  <script src="/static/assets/plugins/jquery/jquery.min.js"></script>
+  <!-- Bootstrap 4 -->
+  <script src="/static/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <!-- bs-custom-file-input -->
+  <script src="/static/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+  <!-- AdminLTE App -->
+  <script src="/static/assets/js/adminlte.min.js"></script>
+  <!-- AdminLTE for demo purposes -->
+  <script src="/static/assets/js/demo.js"></script>
+  <script>
+  $(function () {
+    bsCustomFileInput.init();
+  });
+  </script>
+
+{% endblock javascripts %}
