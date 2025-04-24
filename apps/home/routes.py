@@ -9,9 +9,7 @@ from flask import render_template, request, redirect, url_for, jsonify, current_
 
 from werkzeug.utils import secure_filename
 from apps import db
-from apps.authentication.models import Files
-from apps.authentication.models import OCRData
-
+from apps.authentication.models import Files, Profile, OCRData
 
 
 from flask import flash  # 如果還沒有導入
@@ -28,7 +26,7 @@ import apps.home.ai as detect_answer
 
 
 @blueprint.route('/index')
-#@login_required  # 確保使用者已登入
+# @login_required  # 確保使用者已登入
 def index():
 
     return render_template('home/index.html', segment='index')
@@ -38,15 +36,19 @@ def index():
 def bounding():
     return render_template('home/bounding_box.html')
 
+
 # 允許的文件類型
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@blueprint.route('/upload', methods=['POST']) 
+
+@blueprint.route('/upload', methods=['POST'])
 @login_required  # 確保使用者已登入
-def upload_image():  
+def upload_image():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
@@ -125,7 +127,7 @@ def doc_upload():
     if request.method == 'POST':
         some_input = request.form.get('some_input')
         return redirect(url_for('home/blueprint.doc_download'))  # 确保正确的路由
-    
+
     return render_template('home/doc_upload.html', segment='doc_upload')
 
 
@@ -292,7 +294,31 @@ def route_template(template):
         return render_template('home/page-500.html'), 500
 
 
+@blueprint.route('/api/profile', methods=['GET'])
+@login_required  # 確保使用者已經登入
+def get_profile():
+    if current_user.is_authenticated:  # 檢查是否已登入
+        # 查找當前用戶對應的 Profile
+        profile = Profile.query.filter_by(user_id=current_user.id).first()
+        if profile:
+            user_profile = {
+                'email': current_user.email,
+                'name': profile.name,
+                'department': profile.department,
+                'student_id': profile.student_id,
+                'phone': profile.phone,
+                "personal_id": profile.national_id
+
+            }
+            return jsonify(user_profile)
+        else:
+            return jsonify({'error': 'Profile not found'}), 404
+    else:
+        return jsonify({'error': 'Unauthorized'}), 401
+
 # Helper - Extract current page name from request
+
+
 def get_segment(request):
 
     try:

@@ -52,6 +52,21 @@ class Files(db.Model):
     
     def __repr__(self):
         return f'<File {self.file_name}>'
+    
+class Profile(db.Model):
+    __tablename__ = 'profiles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False, unique=True)
+    name = db.Column(db.String(64), nullable=True)
+    department = db.Column(db.String(64), nullable=True)
+    student_id = db.Column(db.String(64), nullable=True)
+    national_id = db.Column(db.String(64), nullable=True)
+    phone =db.Column(db.String(10), nullable=True)
+
+    def __repr__(self):
+        return f"<Profile user_id={self.user_id} name={self.name}>"
+    
 
 
 class OCRData(db.Model):
