@@ -1,8 +1,7 @@
-from dotenv import load_dotenv
-from inference_sdk.http.errors import HTTPCallErrorError
-from inference_sdk import InferenceHTTPClient
-import json
 import os
+import json
+import requests
+from dotenv import load_dotenv
 
 # 載入環境變數
 load_dotenv()
@@ -12,44 +11,54 @@ api_key = os.getenv("ROBOFLOW_API_KEY")
 if not api_key:
     raise ValueError("❌ 環境變數 ROBOFLOW_API_KEY 未設定")
 
-# 初始化 InferenceHTTPClient，只需初始化一次
-CLIENT = InferenceHTTPClient(
-    api_url="https://serverless.roboflow.com",
-    api_key=api_key
-)
+# Roboflow Model 設定
+MODEL_ID = "my-first-project-ksnki/5"
+API_URL = f"https://detect.roboflow.com/{MODEL_ID}?api_key={api_key}"
 
 
 def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.json'):
     """
     偵測圖片中的 answer 區塊，結果存入 JSON 檔案。
-
     :param image_path: 圖片檔案路徑
     :param output_json: 要寫入的 JSON 檔案名稱
     """
     try:
-        res = CLIENT.infer(image_path, model_id="my-first-project-ksnki/5")
-    except HTTPCallErrorError as e:
-        print(f"[❌] Roboflow API 呼叫失敗: {e.description}")
-        print(f"狀態碼: {e.status_code}, 訊息: {e.api_message}")
-        return  # 發生錯誤就不要繼續處理了
+        with open(image_path, "rb") as img_file:
+            res = requests.post(
+                API_URL,
+                files={"file": img_file}
+            )
+        res.raise_for_status()
+    except requests.exceptions.RequestException as e:
+        print(f"[❌] Roboflow API 呼叫失敗: {e}")
+        return
 
-    filtered_results = [
-        {
-            "id": f"a{idx}",  # 新增 id 欄位，以 a 開頭
+    try:
+        result_json = res.json()
+        predictions = result_json.get("predictions", [])
+    except Exception as e:
+        print(f"[❌] 回傳結果解析失敗: {e}")
+        return
+
+    filtered_results = []
+    answer_idx = 0  # ✅ 只針對 answer 類別累加
+
+    for pred in predictions:
+        if pred["class"] != "answer":
+            continue
+
+        filtered_results.append({
+            "id": f"a{answer_idx}",
             "mode": "answer",
-            "name": idx,
+            "name": answer_idx,
             "x": pred["x"] - pred["width"] / 2,
             "y": pred["y"] - pred["height"] / 2,
             "width": pred["width"],
             "height": pred["height"],
             "center_x": pred["x"],
             "center_y": pred["y"]
-        }
-        for idx, pred in enumerate(
-            [p for p in res["predictions"] if p["class"] == "answer"]
-        )
-    ]
-    # print(filtered_results)
+        })
+        answer_idx += 1  # ✅ 手動增加
 
     # 讀取現有 JSON 資料
     try:
@@ -69,5 +78,4 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
 
 
 if __name__ == "__main__":
-    detect_answers(
-        "apps/uploads/yourpic.jpg")
+    detect_answers("apps/uploads/yourpic.jpg")
