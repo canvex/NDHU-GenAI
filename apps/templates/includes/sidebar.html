@@ -214,20 +214,20 @@
 {#              </li>#}
 {#            </ul>#}
 {#          </li>#}
-          <li class="nav-item has-treeview {% if 'forms-' in segment %} menu-open {% endif %}">
-            <a href="#" class="nav-link {% if 'forms-' in segment %} active {% endif %}">
+          <li class="nav-item  ">
+            <a href="{{ url_for('home_blueprint.doc_auto_select') }}" class="nav-link {% if 'forms-' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-edit"></i>
               <p>
                 新增表單
-                <i class="fas fa-angle-left right"></i>
+                
               </p>
             </a>
-            <ul class="nav nav-treeview">
+            <!-- <ul class="nav nav-treeview">
               <li class="nav-item">
-                <!-- <a href="/forms-general.html" class="nav-link {% if 'forms-general' in segment %} active {% endif %}">
+                <a href="/forms-general.html" class="nav-link {% if 'forms-general' in segment %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>General Elements</p>
-                </a> -->
+                </a>
 
                 <a href="{{ url_for('home_blueprint.doc_upload') }}" class="nav-link">
                   <i class="far fa-circle nav-icon"></i>
@@ -252,8 +252,8 @@
                   <p>Validation</p>
                 </a>
               </li>
-            </ul>
-          </li>
+            </ul> -->
+          <!-- </li> -->
  
           <li class="nav-item has-treeview {% if 'tables-' in segment %} menu-open {% endif %}">
             <a href="{{ url_for('authentication_blueprint.logout') }}" class="nav-link {% if 'tables-' in segment %} active {% endif %}" >
