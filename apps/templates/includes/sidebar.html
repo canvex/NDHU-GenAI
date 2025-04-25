@@ -10,9 +10,12 @@
     <div class="sidebar">
       <!-- Sidebar user panel (optional) -->
       <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-        <div class="image">
-          <img src="/static/assets/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image">
+        <div class="image" >
+          <a href="{{ url_for('home_blueprint.profile') }}">
+          <img src="/static/assets/img/user2-160x160.jpg" class="img-circle elevation-2" alt="User Image" >
+        </a>
         </div>
+        
         <div class="info">
           <a href="{{ url_for('authentication_blueprint.logout') }}" class="d-block">
             {{ current_user.username }} - Logout
@@ -215,7 +218,7 @@
             <a href="#" class="nav-link {% if 'forms-' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-edit"></i>
               <p>
-                Forms
+                新增表單
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
@@ -251,11 +254,12 @@
               </li>
             </ul>
           </li>
+ 
           <li class="nav-item has-treeview {% if 'tables-' in segment %} menu-open {% endif %}">
-            <a href="#" class="nav-link {% if 'tables-' in segment %} active {% endif %}">
+            <a href="{{ url_for('authentication_blueprint.logout') }}" class="nav-link {% if 'tables-' in segment %} active {% endif %}" >
               <i class="nav-icon fas fa-table"></i>
               <p>
-                Tables
+                歷史表單
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
@@ -263,19 +267,19 @@
               <li class="nav-item">
                 <a href="/tables-simple.html" class="nav-link {% if 'tables-simple' in segment %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>Simple Tables</p>
+                  <p>表單一</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="/tables-data.html" class="nav-link {% if 'tables-data' in segment %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>DataTables</p>
+                  <p>表單二</p>
                 </a>
               </li>
               <li class="nav-item">
                 <a href="/tables-jsgrid.html" class="nav-link {% if 'tables-jsgrid' in segment %} active {% endif %}">
                   <i class="far fa-circle nav-icon"></i>
-                  <p>jsGrid</p>
+                  <p>表單三</p>
                 </a>
               </li>
             </ul>

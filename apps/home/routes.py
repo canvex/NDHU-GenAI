@@ -28,10 +28,29 @@ import apps.home.ai as detect_answer
 
 
 @blueprint.route('/index')
-#@login_required  # 確保使用者已登入
+@login_required  # 確保使用者已登入
 def index():
 
     return render_template('home/index.html', segment='index')
+
+@blueprint.route('/profile')
+@login_required 
+def profile():
+    if request.method == 'POST':
+        some_input = request.form.get('some_input')
+        return redirect(url_for('home/blueprint.profile_edit')) 
+     
+    return render_template('home/profile.html')
+
+@blueprint.route('/profile_edit')
+@login_required 
+def profile_edit():
+    if request.method == 'POST':
+        some_input = request.form.get('some_input')
+        return redirect(url_for('home/blueprint.profile')) 
+     
+    return render_template('home/profile_edit.html')
+
 
 
 @blueprint.route('/bounding_box')

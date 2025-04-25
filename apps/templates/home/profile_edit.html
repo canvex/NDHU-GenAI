@@ -252,116 +252,124 @@
 
       </div>
       <div class="col-md-12">
-        <form method="POST" action="/submit_form">
-          <div class="card card-info">
-            <div class="card-header">
-              <h3 class="card-title">個人資料
-              </h3>
-            </div>
-            <div class="card-body">
-              <!-- Date dd/mm/yyyy -->
-              {# #}
-              <!-- /.form group -->
 
-              <!-- Date mm/dd/yyyy -->
-              {# <div class="form-group">#}
-                {# <div class="input-group">#}
-                  {# <div class="input-group-prepend">#}
-                    {# <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>#}
-                    {# </div>#}
-                  {# <input type="text" class="form-control" data-inputmask-alias="datetime"
-                    data-inputmask-inputformat="mm/dd/yyyy" data-mask>#}
+        <div class="card card-info">
+          <div class="card-header">
+            <h3 class="card-title">個人資料
+            </h3>
+          </div>
+          <div class="card-body">
+            <!-- Date dd/mm/yyyy -->
+            {# #}
+            <!-- /.form group -->
+
+            <!-- Date mm/dd/yyyy -->
+            {# <div class="form-group">#}
+              {# <div class="input-group">#}
+                {# <div class="input-group-prepend">#}
+                  {# <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>#}
                   {# </div>#}
-                {# <!-- /.input group -->#}
+                {# <input type="text" class="form-control" data-inputmask-alias="datetime"
+                  data-inputmask-inputformat="mm/dd/yyyy" data-mask>#}
                 {# </div>#}
-              <!-- /.form group -->
-              <div class="row">
-                <div class="form-group col-sm-6">
-                  <label for="exampleInputEmail1">姓名</label>
-                  <input type="text" class="form-control" id="exampleInputEmail1" value="王小明" readonly>
-                </div>
+              {# <!-- /.input group -->#}
+              {# </div>#}
+            <!-- /.form group -->
+            <div class="row">
+              <div class="form-group col-sm-6">
+                <label for="exampleInputEmail1">姓名</label>
+                <input type="email" class="form-control" id="exampleInputEmail1">
+              </div>
 
-                <div class="form-group col-sm-6">
-                  <label for="exampleInputEmail2">地址</label>
-                  <input type="text" class="form-control" id="exampleInputEmail2" value="台北市中山區民生東路三段123號" readonly>
+              <div class="form-group col-sm-6">
+                <label for="exampleInputEmail1">地址</label>
+                <input type="email" class="form-control" id="exampleInputEmail1">
+              </div>
+            </div>
+            <!-- phone mask -->
+            <div class="row">
+              <div class="form-group col-sm-6">
+                <label>電話:</label>
+
+                <div class="input-group ">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                  </div>
+                  <input type="text" class="form-control" data-inputmask='"mask": "(99) 9999-9999"' data-mask>
                 </div>
               </div>
+
+              <div class="form-group col-sm-6">
+                <label>行動電話：</label>
+
+                <div class="input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                  </div>
+                  <input type="text" class="form-control" data-inputmask="'mask': ['9999-9999]" data-mask>
+                </div>
+                <!-- /.input group -->
+              </div>
+            </div>
+            <div class="row">
+              <div class="form-group col-sm-6">
+                <label>生日:</label>
+                <div class="input-group date" id="reservationdate" data-target-input="nearest">
+                  <input type="text" class="form-control datetimepicker-input" data-target="#reservationdate" />
+                  <div class="input-group-append" data-target="#reservationdate" data-toggle="datetimepicker">
+                    <div class="input-group-text"><i class="fa fa-calendar"></i></div>
+                  </div>
+                </div>
+              </div>
+              <!-- /.input group -->
+
+              <!-- /.form group -->
 
               <!-- phone mask -->
-              <div class="row">
-                <div class="form-group col-sm-6">
-                  <label>電話:</label>
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                    </div>
-                    <input type="text" class="form-control" value="(02) 1234-5678" readonly>
-                  </div>
-                </div>
 
-                <div class="form-group col-sm-6">
-                  <label>行動電話：</label>
-                  <div class="input-group">
-                    <div class="input-group-prepend">
-                      <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                    </div>
-                    <input type="text" class="form-control" value="0912-345-678" readonly>
-                  </div>
+
+
+              <!-- /.form group -->
+
+              <!-- IP mask -->
+
+
+              <div class="form-group col-sm-6">
+                <label>性別:</label>
+                <div class="form-check">
+                  <input type="radio" class="form-check-input" id="radioMale" name="gender" value="male" checked>
+                  <label class="form-check-label" for="radioMale">男</label>
+                </div>
+                <div class="form-check">
+                  <input type="radio" class="form-check-input" id="radioFemale" name="gender" value="female">
+                  <label class="form-check-label" for="radioFemale">女</label>
                 </div>
               </div>
-
-              <div class="row">
-                <div class="form-group col-sm-6">
-                  <label>生日:</label>
-                  <div class="input-group date" id="reservationdate" data-target-input="nearest">
-                    <input type="text" class="form-control datetimepicker-input" data-target="#reservationdate"
-                      value="1990/01/01" readonly />
-                    <div class="input-group-append" data-target="#reservationdate" data-toggle="datetimepicker">
-                      <div class="input-group-text"><i class="fa fa-calendar"></i></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="form-group col-sm-6">
-                  <label>性別:</label>
-                  <div class="form-check">
-                    <input type="radio" class="form-check-input" id="radioMale" name="gender" value="male" checked
-                      disabled>
-                    <label class="form-check-label" for="radioMale">男</label>
-                  </div>
-                  <div class="form-check">
-                    <input type="radio" class="form-check-input" id="radioFemale" name="gender" value="female" disabled>
-                    <label class="form-check-label" for="radioFemale">女</label>
-                  </div>
-                </div>
-              </div>
-
 
             </div>
             <!-- /.form group -->
 
 
-            <div class="card-footer">
-              <a href="{{ url_for('home_blueprint.profile_edit') }}" class="btn btn-primary float-sm-right">
-                確認
-            </a>
-            </div>
-
           </div>
-        </form>
+          <div class="card-footer">
+            <a href="{{ url_for('home_blueprint.profile') }}" class="btn btn-primary float-sm-right">
+              確認
+            </a>
+          </div>
+
+        </div>
+
+        <!-- /.card-body -->
       </div>
-
-      <!-- /.card-body -->
-    </div>
-    <!-- /.card -->
+      <!-- /.card -->
 
 
 
 
-    <!-- /.row -->
-</div><!-- /.container-fluid -->
-</section>
-<!-- /.content -->
+      <!-- /.row -->
+    </div><!-- /.container-fluid -->
+  </section>
+  <!-- /.content -->
 </div>
 
 {% endblock content %}
