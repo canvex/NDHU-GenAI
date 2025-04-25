@@ -28,8 +28,13 @@ import apps.home.ai as detect_answer
 @blueprint.route('/index')
 #@login_required  # 確保使用者已登入
 def index():
-
     return render_template('home/index.html', segment='index')
+
+
+@blueprint.route('/doc_auto_select')
+#@login_required  # 確保使用者已登入
+def doc_auto_select():
+    return render_template('home/doc_auto_select.html')
 
 @blueprint.route('/profile')
 @login_required 
