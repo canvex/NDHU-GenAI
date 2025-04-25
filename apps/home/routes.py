@@ -183,12 +183,11 @@ def doc_select():
 
         filename = secure_filename(file.filename)
         new_file = Files(
-            file_name=filename,
-            original_name=file.filename,
-            file_type=filename.rsplit('.', 1)[1].lower(),
-            file_size=len(file_data),
-            file_data=file_data,
-            user_id=user_id
+        file_name=file.filename,  # 直接使用原始檔案名稱
+        file_type=filename.rsplit('.', 1)[1].lower(),
+        file_size=len(file_data),
+        file_data=file_data,
+        user_id=user_id
         )
         db.session.add(new_file)
         db.session.commit()
@@ -229,35 +228,18 @@ def doc_select():
         with open("output/3_matched_result.json", "r", encoding="utf-8") as f:
             ocr_content = json.load(f)
 
-        # === 新增：儲存 OCR 資料到資料庫 ===
-        ocr_record = OCRData(
-            file_id=new_file.id,
-            filename=filename.split('.')[0],  # 移除副檔名
-            original_name=file.filename,
-            ocr_data=ocr_content,  # 保留原始JSON數據
-            ocr_status='OK' if ocr_status else 'FAILED',
-            size_kb=round(file_size / 1024, 2),
-            success=True,
-            user_id=user_id
+        # === 儲存 OCR 資料 ===
+        # 創建多條OCR記錄
+        ocr_records = OCRData.create_from_ocr_content(
+        file_id=new_file.id,
+        ocr_content=ocr_content,
+        user_id=user_id
         )
-        # 不需要手動處理items，OCRData模型的__init__會自動處理
-        db.session.add(ocr_record)
+        db.session.add_all(ocr_records)
         db.session.commit()
 
-        # 構建結構化數據的響應
-        structured_data = [{
-            'item_id': item.item_id,
-            'name': item.name,
-            'position': {
-                'x': item.x,
-                'y': item.y,
-                'width': item.width,
-                'height': item.height
-            },
-            'mode': item.mode
-        } for item in ocr_record.items]
-
-        return jsonify({
+        # 構建響應數據
+        response_data = {
             'success': True,
             'message': 'File uploaded and processed successfully',
             'file_id': new_file.id,
@@ -265,15 +247,16 @@ def doc_select():
             'size_kb': round(file_size / 1024, 2),
             'gpt_response': gpt_response,
             'ocr_status': ocr_status,
-            'original_ocr_data': ocr_content,  # 原始JSON數據
-            'structured_data': structured_data,  # 結構化數據
-            'ocr_record_id': ocr_record.id
-        }), 200
+            'ocr_items': [record.to_dict() for record in ocr_records],
+            'count': len(ocr_records)
+        }
+
+        return jsonify(response_data), 200
 
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"文件處理錯誤: {str(e)}", exc_info=True)
-        return jsonify({'error': f'伺服器錯誤: {str(e)}'}), 500
+        return jsonify({'error': f'伺服器錯誤: {str(e)}', 'success': False}), 500
 
 
 # 文件填寫

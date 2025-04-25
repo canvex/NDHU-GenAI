@@ -750,19 +750,14 @@
     document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
-    fetch("/upload", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        if (response.status === 403) {
-          throw new Error("403"); // 手動丟出錯誤，讓它進 catch
-        }
-        return response.json(); // 其他狀況正常處理
-      })
-      .then((data) => {
-        // 隱藏 loading 動畫
-        document.getElementById("loading").style.display = "none";
+        fetch("/doc_select", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            // 隱藏 loading 動畫
+            document.getElementById("loading").style.display = "none";
 
         // 檢查是否有錯誤訊息
         if (data.error) {
