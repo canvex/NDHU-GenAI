@@ -156,6 +156,8 @@
 
       <br /><br />
       <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
+      <button id="exportBtn" class="btn btn-secondary">匯出 JSON</button>
+
       
       <br /><br />
       <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
@@ -192,7 +194,12 @@
       <pre id="output"></pre>
       <canvas id="canvas" ></canvas>
       <br />
-
+      <div class="sidebar" hidden>
+        <h3>問題 (Questions)</h3>
+        <ul id="questionList"></ul>
+        <h3>回答 (Answers)</h3>
+        <ul id="answerList"></ul>
+      </div>
 
 
 
