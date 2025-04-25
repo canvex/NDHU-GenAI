@@ -184,8 +184,24 @@
       let resizeCorner = null; // 新增一個變數來儲存選擇的縮放角落
       let isDrawing = false;
       let originalFileName = "result.png"; // 預設下載圖片名稱
-      const answerCandidates = ["張小明", "資工組", "411121340"]; //暫時測試資料
+      const answerCandidates = []; //存放個人資料，answer右鍵可以填入
+      // 取得今天日期（格式：2025/04/25）
+      const today = new Date();
+      const formattedDate = `${today.getFullYear()}/${String(
+        today.getMonth() + 1
+      ).padStart(2, "0")}/${String(today.getDate()).padStart(2, "0")}`;
 
+      // 加入今天日期
+      answerCandidates.push(formattedDate);
+      // 發送 GET 請求到 Flask API 拿個人資料
+      fetch("/api/profile")
+        .then((response) => response.json())
+        .then((data) => {
+          // 使用 Object.values() 提取所有的值，並將其加入 answerCandidates 陣列
+          answerCandidates.push(...Object.values(data));
+          console.log(answerCandidates); // 確認資料已經加入陣列
+        })
+        .catch((error) => console.error("Error fetching data:", error));
       upload.addEventListener("change", (event) => {
         const file = event.target.files[0];
         if (file) {
@@ -575,7 +591,7 @@
               ctx.fillStyle = "green";
               ctx.font = "22px Arial";
               ctx.fillText(
-                f.name || "未填寫答案",
+                f.name,
                 x + 5, // 稍微往右一點
                 y + 30 // 稍微往下，避免太靠邊
               );
@@ -608,7 +624,7 @@
               ctx.fillStyle = "green";
               ctx.font = "22px Arial";
               ctx.fillText(
-                f.name || "未填寫答案",
+                f.name,
                 f.x * canvas.width + 5,
                 f.y * canvas.height + 30
               );
@@ -749,7 +765,12 @@
           method: "POST",
           body: formData,
         })
-          .then((response) => response.json())
+          .then((response) => {
+            if (response.status === 403) {
+              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
+            }
+            return response.json(); // 其他狀況正常處理
+          })
           .then((data) => {
             // 隱藏 loading 動畫
             document.getElementById("loading").style.display = "none";
@@ -776,7 +797,11 @@
             console.error("錯誤:", error);
             // 隱藏 loading 動畫
             document.getElementById("loading").style.display = "none";
-            alert("上傳失敗，請稍後再試！");
+            if (error.message === "403") {
+              alert("帳號已登出，請重新登入");
+            } else {
+              alert("上傳失敗，請稍後再試！\n錯誤訊息：" + error.message);
+            }
           });
       }
       function handleApiResponse(data) {

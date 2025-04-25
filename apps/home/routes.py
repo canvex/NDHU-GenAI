@@ -9,9 +9,7 @@ from flask import render_template, request, redirect, url_for, jsonify, current_
 
 from werkzeug.utils import secure_filename
 from apps import db
-from apps.authentication.models import Files
-
-
+from apps.authentication.models import Files, Profile, OCRData
 
 
 from flask import flash  # 如果還沒有導入
@@ -28,7 +26,7 @@ import apps.home.ai as detect_answer
 
 
 @blueprint.route('/index')
-@login_required  # 確保使用者已登入
+#@login_required  # 確保使用者已登入
 def index():
 
     return render_template('home/index.html', segment='index')
@@ -57,15 +55,19 @@ def profile_edit():
 def bounding():
     return render_template('home/bounding_box.html')
 
+
 # 允許的文件類型
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@blueprint.route('/upload', methods=['POST']) 
+
+@blueprint.route('/upload', methods=['POST'])
 @login_required  # 確保使用者已登入
-def upload_image():  
+def upload_image():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
@@ -144,19 +146,20 @@ def doc_upload():
     if request.method == 'POST':
         some_input = request.form.get('some_input')
         return redirect(url_for('home/blueprint.doc_download'))  # 确保正确的路由
-    
+
     return render_template('home/doc_upload.html', segment='doc_upload')
 
 
 # 文件上傳
 @blueprint.route('/doc_select', methods=['POST'])
+@login_required
 def doc_select():
     if current_user.is_authenticated:
         user_id = current_user.id
     else:
         user_id = None
 
-    # === 前段：基本檢查 ===
+    # === 基本檢查 ===
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in request'}), 400
 
@@ -167,7 +170,7 @@ def doc_select():
         return jsonify({'error': 'File type not allowed'}), 400
 
     try:
-        # === 檔案資料與 DB 儲存 ===
+        # === 檔案處理 ===
         file_data = file.read()
         max_size = 10 * 1024 * 1024
         if len(file_data) > max_size:
@@ -185,7 +188,7 @@ def doc_select():
         db.session.add(new_file)
         db.session.commit()
 
-        # === 儲存實體檔案至 uploads 資料夾 ===
+        # === 儲存實體檔案 ===
         upload_folder = current_app.config['UPLOAD_FOLDER']
         if not os.path.exists(upload_folder):
             os.makedirs(upload_folder)
@@ -196,7 +199,7 @@ def doc_select():
 
         file_size = os.path.getsize(file_path)
 
-        # === 處理流程：GPT + OCR + Roboflow ===
+        # === 處理流程 ===
         clear_output_folder()
 
         try:
@@ -219,7 +222,35 @@ def doc_select():
             return jsonify({'error': f'Roboflow 處理錯誤: {str(e)}'}), 500
 
         with open("output/3_matched_result.json", "r", encoding="utf-8") as f:
-            content = json.load(f)
+            ocr_content = json.load(f)
+
+        # === 新增：儲存 OCR 資料到資料庫 ===
+        ocr_record = OCRData(
+            file_id=new_file.id,
+            filename=filename.split('.')[0],  # 移除副檔名
+            original_name=file.filename,
+            ocr_data=ocr_content,  # 保留原始JSON數據
+            ocr_status='OK' if ocr_status else 'FAILED',
+            size_kb=round(file_size / 1024, 2),
+            success=True,
+            user_id=user_id
+        )
+        # 不需要手動處理items，OCRData模型的__init__會自動處理
+        db.session.add(ocr_record)
+        db.session.commit()
+
+        # 構建結構化數據的響應
+        structured_data = [{
+            'item_id': item.item_id,
+            'name': item.name,
+            'position': {
+                'x': item.x,
+                'y': item.y,
+                'width': item.width,
+                'height': item.height
+            },
+            'mode': item.mode
+        } for item in ocr_record.items]
 
         return jsonify({
             'success': True,
@@ -229,13 +260,15 @@ def doc_select():
             'size_kb': round(file_size / 1024, 2),
             'gpt_response': gpt_response,
             'ocr_status': ocr_status,
-            'ocr_data': content
+            'original_ocr_data': ocr_content,  # 原始JSON數據
+            'structured_data': structured_data,  # 結構化數據
+            'ocr_record_id': ocr_record.id
         }), 200
 
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"文件處理錯誤: {str(e)}", exc_info=True)
         return jsonify({'error': f'伺服器錯誤: {str(e)}'}), 500
-    
 
 
 # 文件填寫
@@ -280,7 +313,31 @@ def route_template(template):
         return render_template('home/page-500.html'), 500
 
 
+@blueprint.route('/api/profile', methods=['GET'])
+@login_required  # 確保使用者已經登入
+def get_profile():
+    if current_user.is_authenticated:  # 檢查是否已登入
+        # 查找當前用戶對應的 Profile
+        profile = Profile.query.filter_by(user_id=current_user.id).first()
+        if profile:
+            user_profile = {
+                'email': current_user.email,
+                'name': profile.name,
+                'department': profile.department,
+                'student_id': profile.student_id,
+                'phone': profile.phone,
+                "personal_id": profile.national_id
+
+            }
+            return jsonify(user_profile)
+        else:
+            return jsonify({'error': 'Profile not found'}), 404
+    else:
+        return jsonify({'error': 'Unauthorized'}), 401
+
 # Helper - Extract current page name from request
+
+
 def get_segment(request):
 
     try:
