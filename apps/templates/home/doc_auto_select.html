@@ -17,6 +17,96 @@
 
 {% endblock stylesheets %}
 
+<style>
+  /*右鍵選單*/
+  #contextMenu {
+    background: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  #contextMenu div {
+    padding: 4px 10px;
+    cursor: pointer;
+  }
+
+  #contextMenu div:hover {
+    background: #f0f0f0;
+  }
+
+  /* 加入 loading 動畫樣式 */
+  #loading {
+    display: none;
+    position: fixed; /* 固定位置 */
+    top: 50%; /* 垂直居中 */
+    left: 50%; /* 水平居中 */
+    transform: translate(-50%, -50%); /* 使元素居中 */
+    font-size: 20px;
+    color: #007bff;
+    z-index: 9999; /* 確保它在其他元素上方 */
+    background-color: rgba(255, 255, 255, 0.8); /* 淺色背景 */
+    border-radius: 10px; /* 加一些圓角 */
+    padding: 20px; /* 內邊距，讓內容不緊貼邊緣 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 添加陰影效果 */
+  }
+
+  #loading .spinner {
+    margin-right: 10px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+  }
+
+  /* 旋轉動畫 */
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  body {
+    display: flex;
+  }
+
+  .container {
+    flex: 2;
+    text-align: center;
+  }
+
+  .sidebar {
+    width: 300px;
+    padding: 10px;
+    border-left: 1px solid #ccc;
+  }
+
+  canvas {
+    border: 1px solid black;
+    cursor: crosshair;
+    max-width: 90%;
+    height: auto;
+  }
+
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  li {
+    padding: 5px;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
 
 {% block content %}
 
@@ -51,11 +141,11 @@
         <div class="card-body">
         </div>
         <div class="form-group">
-          <label for="fileInput">File input</label>
+          <label for="fileInput">上傳檔案</label>
           <div class="input-group">
             <div class="custom-file">
               <input type="file" class="custom-file-input" id="fileInput" name="file">
-              <label class="custom-file-label" for="fileInput">Choose file</label>
+              <label class="custom-file-label" for="fileInput">請選擇檔案</label>
             </div>
             <div class="input-group-append">
               <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
@@ -66,6 +156,8 @@
 
       <br /><br />
       <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
+      <button id="exportBtn" class="btn btn-secondary">匯出 JSON</button>
+
       
       <br /><br />
       <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
@@ -100,9 +192,14 @@
         <span>處理中，請稍候...</span>
       </div>
       <pre id="output"></pre>
-      <canvas id="canvas"></canvas>
+      <canvas id="canvas" ></canvas>
       <br />
-
+      <div class="sidebar" hidden>
+        <h3>問題 (Questions)</h3>
+        <ul id="questionList"></ul>
+        <h3>回答 (Answers)</h3>
+        <ul id="answerList"></ul>
+      </div>
 
 
 
@@ -750,11 +847,16 @@
     document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
-        fetch("/doc_select", {
+    fetch("/upload", {
           method: "POST",
           body: formData,
         })
-          .then((response) => response.json())
+          .then((response) => {
+            if (response.status === 403) {
+              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
+            }
+            return response.json(); // 其他狀況正常處理
+          })
           .then((data) => {
             // 隱藏 loading 動畫
             document.getElementById("loading").style.display = "none";
