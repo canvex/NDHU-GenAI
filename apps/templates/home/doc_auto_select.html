@@ -156,7 +156,12 @@
 
       <br /><br />
       <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
-      <button id="exportBtn" class="btn btn-secondary">匯出 JSON</button>
+      <input
+        type="file"
+        id="importFile"
+        accept="application/json"
+        onchange="importData(event)"
+      />
 
       
       <br /><br />
@@ -847,7 +852,7 @@
     document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
-    fetch("/upload", {
+    fetch("/doc_select", {
           method: "POST",
           body: formData,
         })
