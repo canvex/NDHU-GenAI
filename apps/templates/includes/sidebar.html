@@ -263,25 +263,9 @@
                 <i class="fas fa-angle-left right"></i>
               </p>
             </a>
-            <ul class="nav nav-treeview">
-              <li class="nav-item">
-                <a href="/tables-simple.html" class="nav-link {% if 'tables-simple' in segment %} active {% endif %}">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>表單一</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="/tables-data.html" class="nav-link {% if 'tables-data' in segment %} active {% endif %}">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>表單二</p>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="/tables-jsgrid.html" class="nav-link {% if 'tables-jsgrid' in segment %} active {% endif %}">
-                  <i class="far fa-circle nav-icon"></i>
-                  <p>表單三</p>
-                </a>
-              </li>
+            <ul class="nav nav-treeview" id="history-forms">
+              <!-- 預留位置給歷史文件資料 -->
+              
             </ul>
           </li>
 {#          <li class="nav-header">EXAMPLES</li>#}
@@ -560,3 +544,33 @@
     <!-- /.sidebar -->
   </aside>
   
+
+  <script>
+    // 當頁面加載時，觸發 fetch 請求來獲取歷史文件資料
+    document.addEventListener('DOMContentLoaded', function() {
+  fetchUserFiles();
+});
+
+function fetchUserFiles() {
+  fetch(`/api/userfiles`)  // 不再需要帶 user_id 參數
+    .then(response => response.json())
+    .then(data => {
+      const historyFilesContainer = document.getElementById('history-forms');
+      data.forEach(file => {
+        const li = document.createElement('li');
+        li.classList.add('nav-item');
+        li.innerHTML = `
+          <a href="/file/${file.id}" class="nav-link">
+            <i class="far fa-circle nav-icon"></i>
+            <p>${file.file_name}</p>
+          </a>
+        `;
+        historyFilesContainer.appendChild(li);
+      });
+    })
+    .catch(error => {
+      console.error('獲取使用者檔案資料失敗:', error);
+    });
+}
+
+  </script>

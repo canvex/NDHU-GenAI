@@ -323,6 +323,28 @@ def get_profile():
     else:
         return jsonify({'error': 'Unauthorized'}), 401
 
+
+@blueprint.route('/api/userfiles', methods=['GET'])
+@login_required  # 確保用戶必須登入才能訪問
+def get_user_files():
+    # 使用 current_user 來獲取目前登入的用戶
+    user_id = current_user.id  # current_user.id 是 Flask-Login 提供的當前登入用戶的 ID
+
+    # 查詢該用戶的所有檔案
+    files = Files.query.filter_by(user_id=user_id).all()
+    
+    # 組織回傳的資料
+    result = []
+    for file in files:
+        result.append({
+            'id': file.id,
+            'file_name': file.file_name,
+            'file_type': file.file_type,
+            'file_size': file.file_size,
+            'upload_time': file.upload_time.isoformat() if file.upload_time else None
+        })
+    
+    return jsonify(result)
 # Helper - Extract current page name from request
 
 
