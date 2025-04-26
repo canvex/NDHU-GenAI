@@ -183,11 +183,11 @@ def doc_select():
 
         filename = secure_filename(file.filename)
         new_file = Files(
-        file_name=file.filename,  # 直接使用原始檔案名稱
-        file_type=filename.rsplit('.', 1)[1].lower(),
-        file_size=len(file_data),
-        file_data=file_data,
-        user_id=user_id
+            file_name=file.filename,  # 直接使用原始檔案名稱
+            file_type=filename.rsplit('.', 1)[1].lower(),
+            file_size=len(file_data),
+            file_data=file_data,
+            user_id=user_id
         )
         db.session.add(new_file)
         db.session.commit()
@@ -231,24 +231,20 @@ def doc_select():
         # === 儲存 OCR 資料 ===
         # 創建多條OCR記錄
         ocr_records = OCRData.create_from_ocr_content(
-        file_id=new_file.id,
-        ocr_content=ocr_content,
-        user_id=user_id
+            file_id=new_file.id,
+            ocr_content=ocr_content,
+            user_id=user_id
         )
         db.session.add_all(ocr_records)
         db.session.commit()
 
-        # 構建響應數據
+        # 構建與 /upload 路由一致的響應格式
         response_data = {
-            'success': True,
-            'message': 'File uploaded and processed successfully',
-            'file_id': new_file.id,
-            'filename': filename,
+            'filename': file.filename,  # 使用原始檔名
             'size_kb': round(file_size / 1024, 2),
             'gpt_response': gpt_response,
             'ocr_status': ocr_status,
-            'ocr_items': [record.to_dict() for record in ocr_records],
-            'count': len(ocr_records)
+            'ocr_data': ocr_content  # 保持與 /upload 相同的原始格式
         }
 
         return jsonify(response_data), 200
@@ -256,7 +252,7 @@ def doc_select():
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"文件處理錯誤: {str(e)}", exc_info=True)
-        return jsonify({'error': f'伺服器錯誤: {str(e)}', 'success': False}), 500
+        return jsonify({'error': f'伺服器錯誤: {str(e)}'}), 500
 
 
 # 文件填寫

@@ -141,11 +141,11 @@
         <div class="card-body">
         </div>
         <div class="form-group">
-          <label for="fileInput">File input</label>
+          <label for="fileInput">上傳檔案</label>
           <div class="input-group">
             <div class="custom-file">
               <input type="file" class="custom-file-input" id="fileInput" name="file">
-              <label class="custom-file-label" for="fileInput">Choose file</label>
+              <label class="custom-file-label" for="fileInput">請選擇檔案</label>
             </div>
             <div class="input-group-append">
               <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
@@ -156,6 +156,13 @@
 
       <br /><br />
       <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
+      <input
+        type="file"
+        id="importFile"
+        accept="application/json"
+        onchange="importData(event)"
+      />
+
       
       <br /><br />
       <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
@@ -192,7 +199,12 @@
       <pre id="output"></pre>
       <canvas id="canvas" ></canvas>
       <br />
-
+      <div class="sidebar" hidden>
+        <h3>問題 (Questions)</h3>
+        <ul id="questionList"></ul>
+        <h3>回答 (Answers)</h3>
+        <ul id="answerList"></ul>
+      </div>
 
 
 
@@ -840,7 +852,7 @@
     document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
-    fetch("/upload", {
+    fetch("/doc_select", {
           method: "POST",
           body: formData,
         })
