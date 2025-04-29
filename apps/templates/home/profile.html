@@ -278,12 +278,12 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail1">姓名</label>
-                  <input type="text" class="form-control" id="exampleInputEmail1" value="王小明" readonly>
+                  <input type="text" id="name" value="{{ user_profile.name if user_profile.name else '' }}" readonly>
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail2">身分證字號</label>
-                  <input type="text" class="form-control" id="exampleInputEmail2" value="A123456789" readonly>
+                  <input type="text" id="national_id" value="{{ user_profile.national_id if user_profile.national_id else '' }}" readonly>
                 </div>
               </div>
 
@@ -293,13 +293,13 @@
                 <div class="form-group col-sm-6">
                   <label>性別</label><br>
                   <div class="form-check form-check-inline">
-                    <input type="radio" class="form-check-input" id="gender_male" name="gender" value="male" checked
-                      disabled>
-                    <label class="form-check-label" for="gender_male">男</label>
+                    <input type="radio" class="form-check-input" id="gender_male" name="gender" value="男" 
+                    {% if user_profile.gender == '男' %}checked{% endif %} disabled>
+                  <label class="form-check-label" for="gender_male">男</label>
                   </div>
                   <div class="form-check form-check-inline">
-                    <input type="radio" class="form-check-input" id="gender_female" name="gender" value="female"
-                      disabled>
+                    <input type="radio" class="form-check-input" id="gender_female" name="gender" value="女"
+                    {% if user_profile.gender == '女' %}checked{% endif %} disabled>
                     <label class="form-check-label" for="gender_female">女</label>
                   </div>
                 </div>
@@ -308,13 +308,13 @@
                   <label>生日</label>
                   <div class="form-row">
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_year" value="1990" readonly placeholder="年">
+                      <input type="text" class="form-control" name="birth_year" value="{{ birth_year if birth_year else '' }}" readonly placeholder="年">
                     </div>
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_month" value="01" readonly placeholder="月">
+                      <input type="text" class="form-control" name="birth_month" value="{{ birth_month if birth_month else '' }}" readonly placeholder="月">
                     </div>
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_day" value="01" readonly placeholder="日">
+                      <input type="text" class="form-control" name="birth_day" value="{{ birth_day if birth_day else '' }}" readonly placeholder="日">
                     </div>
                   </div>
                 </div>
@@ -330,7 +330,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input type="text" class="form-control" name="phone" value="(02) 1234-5678" readonly>
+                    <input type="text" id="phone" value="{{ user_profile.phone if user_profile.phone else '' }}" readonly>
                   </div>
                 </div>
 
@@ -340,7 +340,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
                     </div>
-                    <input type="text" class="form-control" name="mobile" value="0912-345-678" readonly>
+                    <input type="text" id="mobile" value="{{ user_profile.mobile if user_profile.mobile else '' }}" readonly>
                   </div>
                 </div>
               </div>
@@ -348,19 +348,19 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label>地址</label>
-                  <input type="text" class="form-control" name="address" value="台北市中山區民生東路三段123號" readonly>
+                  <input type="text" id="address" value="{{ user_profile.address if user_profile.address else '' }}" readonly>
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label>學歷</label>
-                  <input type="text" class="form-control" name="education" value="東華大學" readonly>
+                  <input type="text" id="education" value="{{ user_profile.education if user_profile.education else '' }}" readonly>
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group col-sm-12">
                   <label>E-mail</label>
-                  <input type="email" class="form-control" name="email" value="444@gms.ndhu.edu.tw" readonly>
+                  <input type="text" id="email" value="{{ user_profile.email if user_profile.email else '' }}" readonly>
                 </div>
               </div>
 
@@ -372,7 +372,7 @@
 
             <div class="card-footer">
               <a href="{{ url_for('home_blueprint.profile_edit') }}" class="btn btn-primary float-sm-right">
-                確認
+                編輯
               </a>
             </div>
 

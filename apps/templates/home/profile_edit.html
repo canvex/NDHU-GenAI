@@ -252,7 +252,7 @@
 
       </div>
       <div class="col-md-12">
-        <form method="POST" action="/submit_form">
+        <form method="POST" action="{{ url_for('home_blueprint.profile_edit') }}">
           <div class="card card-info">
             <div class="card-header">
               <h3 class="card-title">個人資料
@@ -278,12 +278,12 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail1">姓名</label>
-                  <input type="text" class="form-control" id="exampleInputEmail1" value="王小明" >
+                  <input type="text" name="name" value="{{ profile.name if profile else '' }}">
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail2">身分證字號</label>
-                  <input type="text" class="form-control" id="exampleInputEmail2" value="A123456789" >
+                  <input type="text" name="national_id" value="{{ profile.national_id if profile else '' }}">
                 </div>
               </div>
 
@@ -293,13 +293,12 @@
                 <div class="form-group col-sm-6">
                   <label>性別</label><br>
                   <div class="form-check form-check-inline">
-                    <input type="radio" class="form-check-input" id="gender_male" name="gender" value="male" checked
-                     >
+                    <input type="radio" name="gender" value="男" {% if profile and profile.gender == '男' %}checked{% endif %}> 
+                     
                     <label class="form-check-label" for="gender_male">男</label>
                   </div>
                   <div class="form-check form-check-inline">
-                    <input type="radio" class="form-check-input" id="gender_female" name="gender" value="female"
-                      >
+                    <input type="radio" name="gender" value="女" {% if profile and profile.gender == '女' %}checked{% endif %}> 
                     <label class="form-check-label" for="gender_female">女</label>
                   </div>
                 </div>
@@ -308,13 +307,13 @@
                   <label>生日</label>
                   <div class="form-row">
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_year" value="1990"  placeholder="年">
+                      <input type="text" name="birth_year" value="{{ profile.birth_date.split('-')[0] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_month" value="01"  placeholder="月">
+                      <input type="text" name="birth_month" value="{{ profile.birth_date.split('-')[1] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input type="text" class="form-control" name="birth_day" value="01"  placeholder="日">
+                      <input type="text" name="birth_day" value="{{ profile.birth_date.split('-')[2] if profile and profile.birth_date else '' }}">
                     </div>
                   </div>
                 </div>
@@ -331,7 +330,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input type="text" class="form-control" name="phone" value="(02) 1234-5678" >
+                    <input type="text" name="phone" value="{{ profile.phone if profile else '' }}">
                   </div>
                 </div>
 
@@ -341,7 +340,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
                     </div>
-                    <input type="text" class="form-control" name="mobile" value="0912-345-678" >
+                    <input type="text" name="mobile" value="{{ profile.mobile if profile else '' }}">
                   </div>
                 </div>
               </div>
@@ -349,19 +348,19 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label>地址</label>
-                  <input type="text" class="form-control" name="address" value="台北市中山區民生東路三段123號" >
+                  <input type="text" name="address" value="{{ profile.address if profile else '' }}">
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label>學歷</label>
-                  <input type="text" class="form-control" name="education" value="東華大學" >
+                  <input type="text" name="education" value="{{ profile.education if profile else '' }}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group col-sm-12">
                   <label>E-mail</label>
-                  <input type="email" class="form-control" name="email" value="444@gms.ndhu.edu.tw" >
+                  <input type="text" name="email" value="{{ profile.email if profile else '' }}">
                 </div>
               </div>
 
@@ -372,8 +371,7 @@
 
 
             <div class="card-footer">
-              <a href="{{ url_for('home_blueprint.profile') }}" class="btn btn-primary float-sm-right">
-                確認
+              <button type="submit" class="btn btn-primary float-right">確認</button>
               </a>
             </div>
 

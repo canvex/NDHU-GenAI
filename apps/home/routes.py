@@ -9,8 +9,7 @@ from flask import render_template, request, redirect, url_for, jsonify, current_
 
 from werkzeug.utils import secure_filename
 from apps import db
-from apps.authentication.models import Files, Profile, OCRData
-
+from apps.authentication.models import Files, Profile, OCRData, UsersProfile
 
 from flask import flash  # 如果還沒有導入
 from flask_login import login_required, current_user
@@ -36,23 +35,70 @@ def index():
 def doc_auto_select():
     return render_template('home/doc_auto_select.html')
 
-@blueprint.route('/profile')
-@login_required 
+@blueprint.route('/profile', methods=['GET', 'POST'])
+@login_required
 def profile():
     if request.method == 'POST':
         some_input = request.form.get('some_input')
-        return redirect(url_for('home/blueprint.profile_edit')) 
-     
-    return render_template('home/profile.html')
+        return redirect(url_for("home_blueprint.profile_edit"))
+    
+    # 查詢使用者的資料
+    user_profile = UsersProfile.query.filter_by(user_id=current_user.id).first()
+    
+    # 如果資料不存在，可以選擇回傳空字典或處理未找到的情況
+    if not user_profile:
+        user_profile = {}
 
-@blueprint.route('/profile_edit')
-@login_required 
+    # 解析生日 (假設是 'YYYY-MM-DD' 格式)
+    if user_profile.birth_date:
+        birth_year, birth_month, birth_day = user_profile.birth_date.split('-')
+    else:
+        birth_year, birth_month, birth_day = '', '', ''
+    
+    return render_template('home/profile.html', user_profile=user_profile,
+                           birth_year=birth_year, birth_month=birth_month, birth_day=birth_day)
+
+
+
+@blueprint.route('/profile_edit', methods=['GET', 'POST'])
+@login_required
 def profile_edit():
-    if request.method == 'POST':
-        some_input = request.form.get('some_input')
-        return redirect(url_for('home/blueprint.profile')) 
-     
-    return render_template('home/profile_edit.html')
+    user_id = current_user.id
+    profile = db.session.query(UsersProfile).filter_by(user_id=user_id).first()
+
+    if request.method == "POST":
+        # 表單資料
+        name = request.form.get("name")
+        national_id = request.form.get("national_id")
+        gender = request.form.get("gender")  # value 應該是 "男" 或 "女"
+        birth_year = request.form.get("birth_year")
+        birth_month = request.form.get("birth_month")
+        birth_day = request.form.get("birth_day")
+        birth_date = f"{birth_year}-{birth_month.zfill(2)}-{birth_day.zfill(2)}" if all([birth_year, birth_month, birth_day]) else None
+        phone = request.form.get("phone")
+        mobile = request.form.get("mobile")
+        address = request.form.get("address")
+        education = request.form.get("education")
+        email = request.form.get("email")
+
+        if not profile:
+            profile = UsersProfile(user_id=user_id)
+
+        # 更新資料
+        profile.name = name
+        profile.national_id = national_id
+        profile.gender = gender
+        profile.birth_date = birth_date
+        profile.phone = phone
+        profile.mobile = mobile
+        profile.address = address
+        profile.education = education
+        profile.email = email
+        db.session.add(profile)
+        db.session.commit()
+        return redirect(url_for("home_blueprint.profile"))
+
+    return render_template("home/profile_edit.html", profile=profile)
 
 
 

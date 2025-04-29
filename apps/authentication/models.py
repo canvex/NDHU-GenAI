@@ -27,6 +27,47 @@ class Users(db.Model, UserMixin):
     def __repr__(self):
         return str(self.username)
 
+from sqlalchemy import event
+
+class UsersProfile(db.Model):
+    __tablename__ = 'users_profile'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='CASCADE'), nullable=False, unique=True)
+    name = db.Column(db.String(64), nullable=True, default='王小明')
+    national_id = db.Column(db.String(10), nullable=True)
+    gender = db.Column(db.String(1), nullable=True)
+    birth_date = db.Column(db.String(10), nullable=True)
+    phone = db.Column(db.String(15), nullable=True)
+    mobile = db.Column(db.String(15), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    education = db.Column(db.String(64), nullable=True)
+    email = db.Column(db.String(128), nullable=True)
+
+    def __repr__(self):
+        return f"<UsersProfile user_id={self.user_id} name={self.name}>"
+
+# --- 自動同步建立 users_profile ---
+@event.listens_for(Users, 'after_insert')
+def create_users_profile(mapper, connection, target):
+    new_profile = {
+        'user_id': target.id,
+        'name': '王小明',
+        'national_id': None,
+        'gender': None,
+        'birth_date': None,
+        'phone': None,
+        'mobile': None,
+        'address': None,
+        'education': None,
+        'email': None
+    }
+    connection.execute(
+        UsersProfile.__table__.insert(),
+        [new_profile]
+    )
+
+
 class Files(db.Model):
     __tablename__ = 'files'
     
@@ -136,6 +177,8 @@ class OCRData(db.Model):
 
     def __repr__(self):
         return f'<OCRData (File ID: {self.file_id}, Item ID: {self.item_id})>'
+
+
 
 @login_manager.user_loader
 def user_loader(id):
