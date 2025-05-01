@@ -278,12 +278,13 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail1">姓名</label>
-                  <input type="text" name="name" value="{{ profile.name if profile else '' }}">
+                  <input class="form-control"type="text" name="name" value="{{ profile.name if profile else '' }}">
                 </div>
+                
 
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail2">身分證字號</label>
-                  <input type="text" name="national_id" value="{{ profile.national_id if profile else '' }}">
+                  <input class="form-control" type="text" name="national_id" value="{{ profile.national_id if profile else '' }}">
                 </div>
               </div>
 
@@ -293,12 +294,12 @@
                 <div class="form-group col-sm-6">
                   <label>性別</label><br>
                   <div class="form-check form-check-inline">
-                    <input type="radio" name="gender" value="男" {% if profile and profile.gender == '男' %}checked{% endif %}> 
+                    <input class="form-control" type="radio" name="gender" value="男" {% if profile and profile.gender == '男' %}checked{% endif %}> 
                      
                     <label class="form-check-label" for="gender_male">男</label>
                   </div>
                   <div class="form-check form-check-inline">
-                    <input type="radio" name="gender" value="女" {% if profile and profile.gender == '女' %}checked{% endif %}> 
+                    <input class="form-control" type="radio" name="gender" value="女" {% if profile and profile.gender == '女' %}checked{% endif %}> 
                     <label class="form-check-label" for="gender_female">女</label>
                   </div>
                 </div>
@@ -307,13 +308,13 @@
                   <label>生日</label>
                   <div class="form-row">
                     <div class="col">
-                      <input type="text" name="birth_year" value="{{ profile.birth_date.split('-')[0] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_year" value="{{ profile.birth_date.split('-')[0] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input type="text" name="birth_month" value="{{ profile.birth_date.split('-')[1] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_month" value="{{ profile.birth_date.split('-')[1] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input type="text" name="birth_day" value="{{ profile.birth_date.split('-')[2] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_day" value="{{ profile.birth_date.split('-')[2] if profile and profile.birth_date else '' }}">
                     </div>
                   </div>
                 </div>
@@ -330,7 +331,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input type="text" name="phone" value="{{ profile.phone if profile else '' }}">
+                    <input class="form-control" type="text" name="phone" value="{{ profile.phone if profile else '' }}">
                   </div>
                 </div>
 
@@ -340,7 +341,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
                     </div>
-                    <input type="text" name="mobile" value="{{ profile.mobile if profile else '' }}">
+                    <input class="form-control" type="text" name="mobile" value="{{ profile.mobile if profile else '' }}">
                   </div>
                 </div>
               </div>
@@ -348,19 +349,19 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label>地址</label>
-                  <input type="text" name="address" value="{{ profile.address if profile else '' }}">
+                  <input class="form-control" type="text" name="address" value="{{ profile.address if profile else '' }}">
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label>學歷</label>
-                  <input type="text" name="education" value="{{ profile.education if profile else '' }}">
+                  <input class="form-control" type="text" name="education" value="{{ profile.education if profile else '' }}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group col-sm-12">
                   <label>E-mail</label>
-                  <input type="text" name="email" value="{{ profile.email if profile else '' }}">
+                  <input class="form-control" type="text" name="email" value="{{ profile.email if profile else '' }}">
                 </div>
               </div>
 
