@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>Loading 測試</title>
+  <style>
+    #loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      color: #007bff;
+      z-index: 9999;
+      background-color: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      gap: 10px;
+    }
+
+    #loading .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <button onclick="showLoading()">顯示 loading 並延遲 2 秒</button>
+
+  <div id="loading" style="display: none;">
+    <div class="spinner"></div>
+    <span>處理中...</span>
+  </div>
+
+  <script>
+    function showLoading() {
+      const loading = document.getElementById("loading");
+      loading.style.display = "flex";
+
+      // 模擬長時間作業（非阻塞！）
+      setTimeout(() => {
+        loading.style.display = "none";
+        alert("完成！");
+      }, 2000);
+    }
+  </script>
+</body>
+</html>

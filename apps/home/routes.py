@@ -35,6 +35,11 @@ def index():
 def doc_auto_select():
     return render_template('home/doc_auto_select.html')
 
+@blueprint.route('/test')
+#@login_required  # 確保使用者已登入
+def test():
+    return render_template('home/test.html')
+
 @blueprint.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
