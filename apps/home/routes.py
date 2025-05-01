@@ -17,6 +17,7 @@ from jinja2 import TemplateNotFound
 import shutil
 import os
 import json
+import base64
 import apps.home.gpt as gpt  # GPT 模組
 import apps.home.ocr as ocr  # OCR 模組
 import apps.home.filterOCR as filterOCR
@@ -348,16 +349,19 @@ def route_template(template):
 def get_profile():
     if current_user.is_authenticated:  # 檢查是否已登入
         # 查找當前用戶對應的 Profile
-        profile = Profile.query.filter_by(user_id=current_user.id).first()
+        profile = UsersProfile.query.filter_by(user_id=current_user.id).first()
         if profile:
             user_profile = {
                 'email': current_user.email,
                 'name': profile.name,
-                'department': profile.department,
-                'student_id': profile.student_id,
+                'education': profile.education,
+                # 'student_id': profile.student_id,
                 'phone': profile.phone,
-                "personal_id": profile.national_id
-
+                "personal_id": profile.national_id,
+                "gender":profile.gender,
+                "birthday":profile.birth_date,
+                "mobile":profile.mobile,
+                "address":profile.address
             }
             return jsonify(user_profile)
         else:
@@ -387,6 +391,31 @@ def get_user_files():
         })
     
     return jsonify(result)
+
+from flask_login import current_user
+from flask import abort
+
+@blueprint.route('/api/file/<int:file_id>', methods=['GET'])
+@login_required
+def get_single_file(file_id):
+    file = Files.query.get_or_404(file_id)
+
+    # 確認此檔案是屬於目前登入的使用者
+    if file.user_id != current_user.id:
+        abort(403)  # Forbidden
+
+    # 將 BLOB 轉成 base64 字串
+    file_data_base64 = base64.b64encode(file.file_data).decode('utf-8')
+
+    return jsonify({
+        'id': file.id,
+        'file_name': file.file_name,
+        'file_type': file.file_type,
+        # 'file_data_base64': file_data_base64,
+        'upload_time': file.upload_time.isoformat() if file.upload_time else None
+    })
+
+
 # Helper - Extract current page name from request
 
 
