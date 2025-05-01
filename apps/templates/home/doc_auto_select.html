@@ -88,11 +88,16 @@
   }
 
   canvas {
-    border: 1px solid black;
-    cursor: crosshair;
-    max-width: 90%;
-    height: auto;
-  }
+  border: 1px solid black;
+  cursor: crosshair;
+  width: 100%;           /* 滿版容器寬 */
+  max-width: 1000px;     /* 可自調最大寬 */
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+
 
   ul {
     list-style-type: none;
@@ -309,6 +314,7 @@
 </div>
 
 
+
 <!-- <script>
   
   function toggleMode() {
@@ -404,24 +410,31 @@
 
   img.onload = function () {
     // 設定 canvas 實際大小為圖片原始大小
-    const originalWidth = img.naturalWidth;
-    const originalHeight = img.naturalHeight;
+   // 固定 canvas 實際解析度為 1000x對應高（依圖片比例）
+const fixedCanvasWidth = 1000;
+const originalWidth = img.naturalWidth;
+const originalHeight = img.naturalHeight;
 
-    const maxWidth = window.innerWidth * 0.7;
-    const imgScale = maxWidth / originalWidth; // 計算縮放比例
+// 計算縮放比例，依圖片原始比例計算對應高
+const scale = fixedCanvasWidth / originalWidth;
+const scaledHeight = originalHeight * scale;
 
-    // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
-    canvas.width = originalWidth;
-    canvas.height = originalHeight;
+// 設定 canvas 實際解析度（畫質）
+canvas.width = fixedCanvasWidth;
+canvas.height = scaledHeight;
 
-    // 根據縮放比例繪製圖片
-    ctx.drawImage(
-      img,
-      0,
-      0,
-      originalWidth * imgScale,
-      originalHeight * imgScale
-    );
+// 讓 CSS 支援 RWD
+canvas.style.width = "100%";         // 讓畫布在視覺上填滿容器
+canvas.style.maxWidth = "1500px";    // 限制最大寬度為 1000px
+canvas.style.height = "auto";        // 自動維持比例
+canvas.style.display = "block";
+canvas.style.margin = "0 auto";
+
+// 使用等比例縮放繪圖
+ctx.setTransform(scale, 0, 0, scale, 0, 0);  // 讓所有繪製動作都自動縮放
+ctx.clearRect(0, 0, originalWidth, originalHeight); // 清空畫布
+ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮放
+
 
     // 在這裡繪製框線或文字等其他圖形
     redrawCanvas();
