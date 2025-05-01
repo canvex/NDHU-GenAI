@@ -40,17 +40,26 @@
   /* 加入 loading 動畫樣式 */
   #loading {
     display: none;
-    position: fixed; /* 固定位置 */
-    top: 50%; /* 垂直居中 */
-    left: 50%; /* 水平居中 */
-    transform: translate(-50%, -50%); /* 使元素居中 */
+    position: fixed;
+    /* 固定位置 */
+    top: 50%;
+    /* 垂直居中 */
+    left: 50%;
+    /* 水平居中 */
+    transform: translate(-50%, -50%);
+    /* 使元素居中 */
     font-size: 20px;
     color: #007bff;
-    z-index: 9999; /* 確保它在其他元素上方 */
-    background-color: rgba(255, 255, 255, 0.8); /* 淺色背景 */
-    border-radius: 10px; /* 加一些圓角 */
-    padding: 20px; /* 內邊距，讓內容不緊貼邊緣 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 添加陰影效果 */
+    z-index: 9999;
+    /* 確保它在其他元素上方 */
+    background-color: rgba(255, 255, 255, 0.8);
+    /* 淺色背景 */
+    border-radius: 10px;
+    /* 加一些圓角 */
+    padding: 20px;
+    /* 內邊距，讓內容不緊貼邊緣 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    /* 添加陰影效果 */
   }
 
   #loading .spinner {
@@ -68,6 +77,7 @@
     0% {
       transform: rotate(0deg);
     }
+
     100% {
       transform: rotate(360deg);
     }
@@ -131,87 +141,154 @@
 
   <!-- Main content -->
   <section class="content">
-    <div class="container-fluid" >
+    <div class="container-fluid">
       <!-- s<div class="row"> -->
       <!-- left column -->
 
 
 
-      <form id="uploadForm" onsubmit="return false;"> <!-- 阻止表單自動提交 -->
+      <form id="uploadForm" onsubmit="return false;" style="padding-left: 200px;padding-right:200px; text-align:center;">
         <div class="card-body">
         </div>
         <div class="form-group">
           <label for="fileInput">上傳檔案</label>
           <div class="input-group">
-            <div class="custom-file">
+            <div class="custom-file" style="padding-left: 100px;padding-right: 100px;">
               <input type="file" class="custom-file-input" id="fileInput" name="file">
-              <label class="custom-file-label" for="fileInput">請選擇檔案</label>
+              <label class="custom-file-label" for="fileInput" style="text-align: left;">請選擇檔案</label>
             </div>
             <div class="input-group-append">
               <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
             </div>
           </div>
 
-    
 
-      <br /><br />
-      <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
-      <input
-        type="file"
-        id="importFile"
-        accept="application/json"
-        onchange="importData(event)"
-      />
 
-      
-      <br /><br />
-      <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
-      <br /><br />
-      <!-- 模式切換開關區域 -->
-      <div id="mode-switcher">
-        <label for="mode-toggle">模式切換：</label>
-        <input type="checkbox" id="mode-toggle" />
-        <span id="mode-status">目前是問題模式</span>
-      </div>
-      <div class="form-group">
-        <label class="switch">
-          <input type="checkbox">
-          <span class="slider round">目前是</span>
-        </label>
-      </div>
-     
-      <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
+          <br /><br />
+          <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
+          <input type="file" id="importFile" accept="application/json" onchange="importData(event)" />
 
-      <!-- 右鍵選單 -->
-      <ul
-        id="contextMenu"
-        style="
+
+          <br /><br />
+          <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
+          <br /><br />
+          <!-- 模式切換開關區域 -->
+          <!-- <div id="mode-switcher">
+            <label for="mode-toggle">模式切換：</label>
+            <input type="checkbox" id="mode-toggle" />
+            <span id="mode-status">目前是問題模式</span>
+          </div>
+
+
+          <div class="form-group">
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider round">目前是</span>
+            </label>
+          </div> -->
+
+
+          <style>
+            /* Toggle 開關樣式 */
+            .switch {
+              position: relative;
+              display: inline-block;
+              width: 60px;
+              height: 30px;
+              margin-right: 10px;
+            }
+          
+            .switch input {
+              opacity: 0;
+              width: 0;
+              height: 0;
+            }
+          
+            .slider {
+              position: absolute;
+              cursor: pointer;
+              background-color: #ccc;
+              border-radius: 34px;
+              top: 0; left: 0;
+              right: 0; bottom: 0;
+              transition: 0.4s;
+            }
+          
+            .slider:before {
+              content: "";
+              position: absolute;
+              height: 22px;
+              width: 22px;
+              left: 4px;
+              bottom: 4px;
+              background-color: white;
+              border-radius: 50%;
+              transition: 0.4s;
+            }
+          
+            input:checked + .slider {
+              background-color: #4CAF50;
+            }
+          
+            input:checked + .slider:before {
+              transform: translateX(30px);
+            }
+          
+            /* 圓角開關 */
+            .slider.round {
+              border-radius: 34px;
+            }
+          
+            .slider.round:before {
+              border-radius: 50%;
+            }
+          </style>
+          
+          <div id="mode-switcher">
+            <label class="switch">
+              <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
+              <span class="slider round"></span>
+            </label>
+            <span id="mode-status">目前是問題模式</span>
+          </div>
+          
+          <script>
+            function toggleMode() {
+              const status = document.getElementById('mode-status');
+              const toggle = document.getElementById('mode-toggle');
+              status.textContent = toggle.checked ? '目前是回答模式' : '目前是問題模式';
+            }
+          </script>
+          
+          <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
+
+          <!-- 右鍵選單 -->
+          <ul id="contextMenu" style="
           display: none;
           position: absolute;
           background: white;
           border: 1px solid gray;
-          padding: 5px;
-        "
-      >
-        <div id="editBtn">✏️ 編輯</div>
-        <div id="deleteBtn">🗑️ 刪除</div>
-        <li>自動填入答案：</li>
-        <ul id="answerOptions" style="padding-left: 15px"></ul>
-      </ul>
+          padding: 5px;"></ul>
+        
+            <div id="editBtn">✏️ 編輯</div>
+            <div id="deleteBtn">🗑️ 刪除</div>
+            <li>自動填入答案：</li>
+            <ul id="answerOptions" style="padding-left: 15px"></ul>
+          </ul>
 
-      <div id="loading">
-        <div class="spinner"></div>
-        <span>處理中，請稍候...</span>
-      </div>
-      <pre id="output"></pre>
-      <canvas id="canvas" ></canvas>
-      <br />
-      <div class="sidebar" hidden>
-        <h3>問題 (Questions)</h3>
-        <ul id="questionList"></ul>
-        <h3>回答 (Answers)</h3>
-        <ul id="answerList"></ul>
-      </div>
+          <div id="loading">
+            <div class="spinner"></div>
+            <span>處理中，請稍候...</span>
+          </div>
+          <pre id="output"></pre>
+          <canvas id="canvas"></canvas>
+          <br />
+          <div class="sidebar" hidden>
+            <h3>問題 (Questions)</h3>
+            <ul id="questionList"></ul>
+            <h3>回答 (Answers)</h3>
+            <ul id="answerList"></ul>
+          </div>
 
 
 
@@ -860,18 +937,18 @@
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
     fetch("/doc_select", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response.status === 403) {
-              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
-            }
-            return response.json(); // 其他狀況正常處理
-          })
-          .then((data) => {
-            // 隱藏 loading 動畫
-            document.getElementById("loading").style.display = "none";
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (response.status === 403) {
+          throw new Error("403"); // 手動丟出錯誤，讓它進 catch
+        }
+        return response.json(); // 其他狀況正常處理
+      })
+      .then((data) => {
+        // 隱藏 loading 動畫
+        document.getElementById("loading").style.display = "none";
 
         // 檢查是否有錯誤訊息
         if (data.error) {
