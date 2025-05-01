@@ -38,9 +38,6 @@ def doc_auto_select():
 @blueprint.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    # if request.method == 'POST':
-    #     some_input = request.form.get('some_input')
-    #     return redirect(url_for("home_blueprint.profile_edit"))
     
     # 查詢使用者的資料
     user_profile = UsersProfile.query.filter_by(user_id=current_user.id).first()
@@ -67,14 +64,14 @@ def profile_edit():
     profile = db.session.query(UsersProfile).filter_by(user_id=user_id).first_or_404()
 
     if request.method == "POST":
-        # 定義空值過濾函數 (嚴謹版)
+        # 定義空值過濾函數 (加強版)
         def clean_input(value):
-            if value is None:
+            # 明確處理 None、空字符串、純空白字符
+            if value is None or (isinstance(value, str) and not value.strip()):
                 return None
-            value = str(value).strip()  # 轉字符串並去除首尾空白
-            return value if value else None  # 空字符串轉為 None
+            return str(value).strip()
 
-        # 處理所有表單欄位
+        # 處理所有表單欄位 (包含可能被清空的欄位)
         form_data = {
             'name': clean_input(request.form.get("name")),
             'national_id': clean_input(request.form.get("national_id")),
@@ -96,16 +93,21 @@ def profile_edit():
             else None
         )
 
-        # 只更新有變化的欄位
+        # 關鍵修改點：強制更新所有欄位，包括被清空的值
         for field, value in form_data.items():
-            if value is not None:  # 只處理非 None 的值
-                setattr(profile, field, value)
+            setattr(profile, field, value)  # 移除了 value is not None 的檢查
 
         db.session.commit()
+        flash('個人資料已更新', 'success')  # 新增成功提示
         return redirect(url_for("home_blueprint.profile"))
 
-    # GET 請求時，確保傳遞的 profile 不會把 None 渲染成字符串
-    return render_template("home/profile_edit.html", profile=profile)
+    # GET 請求處理 (確保 None 不會渲染為字符串)
+    return render_template(
+        "home/profile_edit.html",
+        profile=profile,
+        # 確保前端模板收到正確的空值處理
+        null_to_empty=lambda x: x if x is not None else ""
+    )
 
 
 @blueprint.route('/bounding_box')
