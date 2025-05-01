@@ -34,15 +34,15 @@ class UsersProfile(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='CASCADE'), nullable=False, unique=True)
-    name = db.Column(db.String(64), nullable=True, default='王小明')
-    national_id = db.Column(db.String(10), nullable=True)
-    gender = db.Column(db.String(1), nullable=True)
-    birth_date = db.Column(db.String(10), nullable=True)
-    phone = db.Column(db.String(15), nullable=True)
-    mobile = db.Column(db.String(15), nullable=True)
-    address = db.Column(db.String(255), nullable=True)
-    education = db.Column(db.String(64), nullable=True)
-    email = db.Column(db.String(128), nullable=True)
+    name = db.Column(db.String(64), nullable=True, default=None)  # 改為 default=None
+    national_id = db.Column(db.String(10), nullable=True, default=None)
+    gender = db.Column(db.String(1), nullable=True, default=None)
+    birth_date = db.Column(db.String(10), nullable=True, default=None)
+    phone = db.Column(db.String(15), nullable=True, default=None)
+    mobile = db.Column(db.String(15), nullable=True, default=None)
+    address = db.Column(db.String(255), nullable=True, default=None)
+    education = db.Column(db.String(64), nullable=True, default=None)
+    email = db.Column(db.String(128), nullable=True, default=None)
 
     def __repr__(self):
         return f"<UsersProfile user_id={self.user_id} name={self.name}>"
@@ -52,7 +52,7 @@ class UsersProfile(db.Model):
 def create_users_profile(mapper, connection, target):
     new_profile = {
         'user_id': target.id,
-        'name': '王小明',
+        'name': None,  # 全部欄位明確設為 None
         'national_id': None,
         'gender': None,
         'birth_date': None,
