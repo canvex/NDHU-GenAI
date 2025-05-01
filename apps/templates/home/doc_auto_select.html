@@ -37,22 +37,14 @@
     background: #f0f0f0;
   }
   #loading {
-  display: none;
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 20px;
-  color: #007bff;
-  z-index: 9999;
-  background-color: rgba(255, 255, 255, 0.8);
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 10px;
+  align-items: center;
+  background-color: rgba(0,0,0,0.5);  /* 黑色半透明背景 */
+  z-index: 9999;
 }
 
 #loading .spinner {
@@ -62,11 +54,17 @@
   width: 24px;
   height: 24px;
   animation: spin 1s linear infinite;
+  margin-right: 10px;
 }
 
 @keyframes spin {
-  0%   { transform: rotate(0deg); }
+  0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+#loading span {
+  color: white;
+  font-size: 18px;
 }
 
 
@@ -439,36 +437,41 @@ ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮�
     // 在這裡繪製框線或文字等其他圖形
     redrawCanvas();
   };
+let startDragX = 0;
+let startDragY = 0;
 
   // 當按下滑鼠時
   canvas.addEventListener("mousedown", (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvas.width;
-    const y = (e.clientY - rect.top) / canvas.height;
+  const rect = canvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / canvas.width;
+  const y = (e.clientY - rect.top) / canvas.height;
 
-    selectedField = fields.find(
-      (f) =>
-        x >= f.x && x <= f.x + f.width && y >= f.y && y <= f.y + f.height
-    );
+  selectedField = fields.find(
+    (f) =>
+      x >= f.x && x <= f.x + f.width &&
+      y >= f.y && y <= f.y + f.height
+  );
 
-    if (selectedField) {
-      // 檢查是否點擊到四個角落
-      resizeCorner = getResizeCorner(x, y, selectedField);
-      if (resizeCorner) {
-        isResizing = true;
-      } else {
-        isDragging = true;
-        dragOffsetX = x - selectedField.x;
-        dragOffsetY = y - selectedField.y;
-      }
-      canvas.addEventListener("mousemove", onMouseMove);
+  if (selectedField) {
+    resizeCorner = getResizeCorner(x, y, selectedField);
+    if (resizeCorner) {
+      isResizing = true;
     } else {
-      // 開始繪製新的框選區域
-      startX = x;
-      startY = y;
-      isDrawing = true;
+      // 👉 延遲啟動拖曳，先記錄滑鼠起點
+      startDragX = x;
+      startDragY = y;
+      dragOffsetX = x - selectedField.x;
+      dragOffsetY = y - selectedField.y;
+      isDragging = false; // 還沒啟動拖曳
     }
-  });
+    canvas.addEventListener("mousemove", onMouseMove);
+  } else {
+    startX = x;
+    startY = y;
+    isDrawing = true;
+  }
+});
+
 
   // 當滑鼠移動時
   canvas.addEventListener("mousemove", (e) => {
