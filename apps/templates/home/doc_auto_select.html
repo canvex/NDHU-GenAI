@@ -36,53 +36,42 @@
   #contextMenu div:hover {
     background: #f0f0f0;
   }
-
-  /* 加入 loading 動畫樣式 */
   #loading {
-    display: none;
-    position: fixed;
-    /* 固定位置 */
-    top: 50%;
-    /* 垂直居中 */
-    left: 50%;
-    /* 水平居中 */
-    transform: translate(-50%, -50%);
-    /* 使元素居中 */
-    font-size: 20px;
-    color: #007bff;
-    z-index: 9999;
-    /* 確保它在其他元素上方 */
-    background-color: rgba(255, 255, 255, 0.8);
-    /* 淺色背景 */
-    border-radius: 10px;
-    /* 加一些圓角 */
-    padding: 20px;
-    /* 內邊距，讓內容不緊貼邊緣 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    /* 添加陰影效果 */
-  }
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: #007bff;
+  z-index: 9999;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
 
-  #loading .spinner {
-    margin-right: 10px;
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    animation: spin 1s linear infinite;
-  }
+#loading .spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
 
-  /* 旋轉動畫 */
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
+@keyframes spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
 
-    100% {
-      transform: rotate(360deg);
-    }
-  }
 
+
+  
   body {
     display: flex;
   }
@@ -252,13 +241,7 @@
             <span id="mode-status">目前是問題模式</span>
           </div>
           
-          <script>
-            function toggleMode() {
-              const status = document.getElementById('mode-status');
-              const toggle = document.getElementById('mode-toggle');
-              status.textContent = toggle.checked ? '目前是回答模式' : '目前是問題模式';
-            }
-          </script>
+         
           
           <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
 
@@ -268,7 +251,8 @@
           position: absolute;
           background: white;
           border: 1px solid gray;
-          padding: 5px;"></ul>
+          padding: 5px;"
+          >
         
             <div id="editBtn">✏️ 編輯</div>
             <div id="deleteBtn">🗑️ 刪除</div>
@@ -325,24 +309,53 @@
 </div>
 
 
+<!-- <script>
+  
+  function toggleMode() {
+    const status = document.getElementById('mode-status');
+    const toggle = document.getElementById('mode-toggle');
+    status.textContent = toggle.checked ? '目前是回答模式' : '目前是問題模式';
+  }
+</script> -->
+
 <script>
+  // let isAnswerMode = false; // 初始為問題模式
+
+  // // 取得開關與狀態顯示區域
+  // const modeToggle = document.getElementById("mode-toggle");
+  // const modeStatus = document.getElementById("mode-status");
+
+  // // 監聽開關改變事件
+  // modeToggle.addEventListener("change", () => {
+  //   isAnswerMode = modeToggle.checked; // 當開關開啟時是答案模式，否則是問題模式
+
+  //   // 更新顯示的模式
+  //   if (isAnswerMode) {
+  //     modeStatus.textContent = "目前是答案模式";
+  //   } else {
+  //     modeStatus.textContent = "目前是問題模式";
+  //   }
+  // });
+
+
   let isAnswerMode = false; // 初始為問題模式
 
-  // 取得開關與狀態顯示區域
-  const modeToggle = document.getElementById("mode-toggle");
-  const modeStatus = document.getElementById("mode-status");
+  // 等 DOM 載入完成後執行
+  window.addEventListener("DOMContentLoaded", () => {
+    const modeToggle = document.getElementById("mode-toggle");
+    const modeStatus = document.getElementById("mode-status");
 
-  // 監聽開關改變事件
-  modeToggle.addEventListener("change", () => {
-    isAnswerMode = modeToggle.checked; // 當開關開啟時是答案模式，否則是問題模式
+    // 監聽切換事件
+    modeToggle.addEventListener("change", () => {
+      isAnswerMode = modeToggle.checked;
 
-    // 更新顯示的模式
-    if (isAnswerMode) {
-      modeStatus.textContent = "目前是答案模式";
-    } else {
-      modeStatus.textContent = "目前是問題模式";
-    }
+      modeStatus.textContent = isAnswerMode
+        ? "目前是答案模式"
+        : "目前是問題模式";
+    });
   });
+
+
 
   const upload = document.getElementById("fileInput");
   const canvas = document.getElementById("canvas");
@@ -935,7 +948,7 @@
     // 顯示 loading 動畫
     document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
     document.getElementById("output").textContent = ""; // 清空之前的結果
-
+   
     fetch("/doc_select", {
       method: "POST",
       body: formData,
