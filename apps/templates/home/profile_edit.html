@@ -278,13 +278,13 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail1">姓名</label>
-                  <input class="form-control"type="text" name="name" value="{{ profile.name if profile else '' }}">
+                  <input class="form-control"type="text" name="name" placeholder="王小明"  value="{{ profile.name if profile else '' }}">
                 </div>
                 
 
                 <div class="form-group col-sm-6">
                   <label for="exampleInputEmail2">身分證字號</label>
-                  <input class="form-control" type="text" name="national_id" value="{{ profile.national_id if profile else '' }}">
+                  <input class="form-control" type="text" placeholder="A123456789"  name="national_id" value="{{ profile.national_id if profile else '' }}">
                 </div>
               </div>
 
@@ -308,13 +308,13 @@
                   <label>生日</label>
                   <div class="form-row">
                     <div class="col">
-                      <input class="form-control" type="text" name="birth_year" value="{{ profile.birth_date.split('-')[0] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_year" placeholder="年"  value="{{ profile.birth_date.split('-')[0] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input class="form-control" type="text" name="birth_month" value="{{ profile.birth_date.split('-')[1] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_month" placeholder="月"  value="{{ profile.birth_date.split('-')[1] if profile and profile.birth_date else '' }}">
                     </div>
                     <div class="col">
-                      <input class="form-control" type="text" name="birth_day" value="{{ profile.birth_date.split('-')[2] if profile and profile.birth_date else '' }}">
+                      <input class="form-control" type="text" name="birth_day" placeholder="日"  value="{{ profile.birth_date.split('-')[2] if profile and profile.birth_date else '' }}">
                     </div>
                   </div>
                 </div>
@@ -331,7 +331,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-phone"></i></span>
                     </div>
-                    <input class="form-control" type="text" name="phone" value="{{ profile.phone if profile else '' }}">
+                    <input class="form-control" type="text" name="phone" placeholder="27000000"  value="{{ profile.phone if profile else '' }}">
                   </div>
                 </div>
 
@@ -341,7 +341,7 @@
                     <div class="input-group-prepend">
                       <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
                     </div>
-                    <input class="form-control" type="text" name="mobile" value="{{ profile.mobile if profile else '' }}">
+                    <input class="form-control" type="text" placeholder="0912345678"  name="mobile" value="{{ profile.mobile if profile else '' }}">
                   </div>
                 </div>
               </div>
@@ -349,19 +349,19 @@
               <div class="row">
                 <div class="form-group col-sm-6">
                   <label>地址</label>
-                  <input class="form-control" type="text" name="address" value="{{ profile.address if profile else '' }}">
+                  <input class="form-control" type="text" name="address" placeholder="台北市大安區大安路10號"  value="{{ profile.address if profile else '' }}">
                 </div>
 
                 <div class="form-group col-sm-6">
                   <label>學歷</label>
-                  <input class="form-control" type="text" name="education" value="{{ profile.education if profile else '' }}">
+                  <input class="form-control" type="text" name="education" placeholder="國立東華大學"  value="{{ profile.education if profile else '' }}">
                 </div>
               </div>
 
               <div class="row">
                 <div class="form-group col-sm-12">
                   <label>E-mail</label>
-                  <input class="form-control" type="text" name="email" value="{{ profile.email if profile else '' }}">
+                  <input class="form-control" type="text" name="email" placeholder="411021@gms.ndhu.edu.tw" value="{{ profile.email if profile else '' }}">
                 </div>
               </div>
 
