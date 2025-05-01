@@ -17,6 +17,7 @@ from jinja2 import TemplateNotFound
 import shutil
 import os
 import json
+import base64
 import apps.home.gpt as gpt  # GPT 模組
 import apps.home.ocr as ocr  # OCR 模組
 import apps.home.filterOCR as filterOCR
@@ -43,9 +44,6 @@ def test():
 @blueprint.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    if request.method == 'POST':
-        some_input = request.form.get('some_input')
-        return redirect(url_for("home_blueprint.profile_edit"))
     
     # 查詢使用者的資料
     user_profile = UsersProfile.query.filter_by(user_id=current_user.id).first()
@@ -69,42 +67,53 @@ def profile():
 @login_required
 def profile_edit():
     user_id = current_user.id
-    profile = db.session.query(UsersProfile).filter_by(user_id=user_id).first()
+    profile = db.session.query(UsersProfile).filter_by(user_id=user_id).first_or_404()
 
     if request.method == "POST":
-        # 表單資料
-        name = request.form.get("name")
-        national_id = request.form.get("national_id")
-        gender = request.form.get("gender")  # value 應該是 "男" 或 "女"
-        birth_year = request.form.get("birth_year")
-        birth_month = request.form.get("birth_month")
-        birth_day = request.form.get("birth_day")
-        birth_date = f"{birth_year}-{birth_month.zfill(2)}-{birth_day.zfill(2)}" if all([birth_year, birth_month, birth_day]) else None
-        phone = request.form.get("phone")
-        mobile = request.form.get("mobile")
-        address = request.form.get("address")
-        education = request.form.get("education")
-        email = request.form.get("email")
+        # 定義空值過濾函數 (加強版)
+        def clean_input(value):
+            # 明確處理 None、空字符串、純空白字符
+            if value is None or (isinstance(value, str) and not value.strip()):
+                return None
+            return str(value).strip()
 
-        if not profile:
-            profile = UsersProfile(user_id=user_id)
+        # 處理所有表單欄位 (包含可能被清空的欄位)
+        form_data = {
+            'name': clean_input(request.form.get("name")),
+            'national_id': clean_input(request.form.get("national_id")),
+            'gender': clean_input(request.form.get("gender")),
+            'phone': clean_input(request.form.get("phone")),
+            'mobile': clean_input(request.form.get("mobile")),
+            'address': clean_input(request.form.get("address")),
+            'education': clean_input(request.form.get("education")),
+            'email': clean_input(request.form.get("email"))
+        }
 
-        # 更新資料
-        profile.name = name
-        profile.national_id = national_id
-        profile.gender = gender
-        profile.birth_date = birth_date
-        profile.phone = phone
-        profile.mobile = mobile
-        profile.address = address
-        profile.education = education
-        profile.email = email
-        db.session.add(profile)
+        # 特殊處理生日 (組合年月日)
+        birth_year = clean_input(request.form.get("birth_year"))
+        birth_month = clean_input(request.form.get("birth_month"))
+        birth_day = clean_input(request.form.get("birth_day"))
+        form_data['birth_date'] = (
+            f"{birth_year}-{birth_month.zfill(2)}-{birth_day.zfill(2)}"
+            if all([birth_year, birth_month, birth_day])
+            else None
+        )
+
+        # 關鍵修改點：強制更新所有欄位，包括被清空的值
+        for field, value in form_data.items():
+            setattr(profile, field, value)  # 移除了 value is not None 的檢查
+
         db.session.commit()
+        flash('個人資料已更新', 'success')  # 新增成功提示
         return redirect(url_for("home_blueprint.profile"))
 
-    return render_template("home/profile_edit.html", profile=profile)
-
+    # GET 請求處理 (確保 None 不會渲染為字符串)
+    return render_template(
+        "home/profile_edit.html",
+        profile=profile,
+        # 確保前端模板收到正確的空值處理
+        null_to_empty=lambda x: x if x is not None else ""
+    )
 
 
 @blueprint.route('/bounding_box')
@@ -353,16 +362,19 @@ def route_template(template):
 def get_profile():
     if current_user.is_authenticated:  # 檢查是否已登入
         # 查找當前用戶對應的 Profile
-        profile = Profile.query.filter_by(user_id=current_user.id).first()
+        profile = UsersProfile.query.filter_by(user_id=current_user.id).first()
         if profile:
             user_profile = {
                 'email': current_user.email,
                 'name': profile.name,
-                'department': profile.department,
-                'student_id': profile.student_id,
+                'education': profile.education,
+                # 'student_id': profile.student_id,
                 'phone': profile.phone,
-                "personal_id": profile.national_id
-
+                "personal_id": profile.national_id,
+                "gender":profile.gender,
+                "birthday":profile.birth_date,
+                "mobile":profile.mobile,
+                "address":profile.address
             }
             return jsonify(user_profile)
         else:
@@ -392,6 +404,31 @@ def get_user_files():
         })
     
     return jsonify(result)
+
+from flask_login import current_user
+from flask import abort
+
+@blueprint.route('/api/file/<int:file_id>', methods=['GET'])
+@login_required
+def get_single_file(file_id):
+    file = Files.query.get_or_404(file_id)
+
+    # 確認此檔案是屬於目前登入的使用者
+    if file.user_id != current_user.id:
+        abort(403)  # Forbidden
+
+    # 將 BLOB 轉成 base64 字串
+    file_data_base64 = base64.b64encode(file.file_data).decode('utf-8')
+
+    return jsonify({
+        'id': file.id,
+        'file_name': file.file_name,
+        'file_type': file.file_type,
+        # 'file_data_base64': file_data_base64,
+        'upload_time': file.upload_time.isoformat() if file.upload_time else None
+    })
+
+
 # Helper - Extract current page name from request
 
 
