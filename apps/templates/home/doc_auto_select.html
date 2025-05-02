@@ -106,14 +106,14 @@
   } */
 
   canvas {
-  display: block;
-  width: 100%;
-  max-width: 1000px;
-  height: auto;
-  margin: 0 auto;
-  border: 1px solid black;
-  cursor: crosshair;
-}
+    display: block;
+    width: 100%;
+    max-width: 1000px;
+    height: auto;
+    margin: 0 auto;
+    border: 1px solid black;
+    cursor: crosshair;
+  }
 
 
   ul {
@@ -437,25 +437,34 @@
   });
 
   img.onload = function () {
-  const originalWidth = img.naturalWidth;
-  const originalHeight = img.naturalHeight;
+    // 原始圖片尺寸
+    const originalWidth = img.naturalWidth;
+    const originalHeight = img.naturalHeight;
 
-  const fixedCanvasWidth = 1000;
-  scale = fixedCanvasWidth / originalWidth;  // ⬅️ 注意：讓 scale 是全域變數
-  const fixedCanvasHeight = originalHeight * scale;
+    // 設定畫布固定寬度（解析度用來畫圖，與 CSS 分開）
+    const fixedCanvasWidth = 1000;
+    const scale = fixedCanvasWidth / originalWidth;
+    const fixedCanvasHeight = originalHeight * scale;
 
-  canvas.width = fixedCanvasWidth;
-  canvas.height = fixedCanvasHeight;
+    // 設定 canvas 實際解析度（像素大小）
+    canvas.width = fixedCanvasWidth;
+    canvas.height = fixedCanvasHeight;
 
-  canvas.style.width = "100%";
-  canvas.style.maxWidth = "1000px";
-  canvas.style.height = "auto";
-  canvas.style.display = "block";
-  canvas.style.margin = "0 auto";
+    // 設定 CSS RWD 樣式
+    canvas.style.width = "100%";
+    canvas.style.maxWidth = "1000px";
+    canvas.style.height = "auto";
+    canvas.style.display = "block";
+    canvas.style.margin = "0 auto";  // 水平置中
 
-  // ✅ 這裡不要畫圖 → 把畫圖工作留給 redrawCanvas
-  redrawCanvas();
-};
+    // 使用 setTransform 自動縮放圖像與所有畫圖操作
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.clearRect(0, 0, originalWidth, originalHeight);
+    ctx.drawImage(img, 0, 0);
+
+    // 重新繪製框線等
+    redrawCanvas();
+  };
 
 
 
@@ -781,8 +790,10 @@
   }
 
   function redrawCanvas(showBox = true) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    ctx.setTransform(scale, 0, 0, scale, 0, 0); // ➤ 這樣所有畫圖都用正確比例
+    ctx.clearRect(0, 0, canvas.width / scale, canvas.height / scale);
+    ctx.drawImage(img, 0, 0);
+  
     ctx.lineWidth = 2;
 
     fields.forEach((f) => {
@@ -983,18 +994,18 @@
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
     fetch("/doc_select", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response.status === 403) {
-              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
-            }
-            return response.json(); // 其他狀況正常處理
-          })
-          .then((data) => {
-            // 隱藏 loading 動畫
-            document.getElementById("loading").style.display = "none";
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => {
+        if (response.status === 403) {
+          throw new Error("403"); // 手動丟出錯誤，讓它進 catch
+        }
+        return response.json(); // 其他狀況正常處理
+      })
+      .then((data) => {
+        // 隱藏 loading 動畫
+        document.getElementById("loading").style.display = "none";
 
         // 檢查是否有錯誤訊息
         if (data.error) {
