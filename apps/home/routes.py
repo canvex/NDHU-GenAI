@@ -12,6 +12,7 @@ from apps import db
 from apps.authentication.models import Files, Profile, OCRData, UsersProfile
 
 from flask import flash  # 如果還沒有導入
+from flask import abort
 from flask_login import login_required, current_user
 from jinja2 import TemplateNotFound
 import shutil
@@ -405,29 +406,68 @@ def get_user_files():
     
     return jsonify(result)
 
-from flask_login import current_user
-from flask import abort
 
 @blueprint.route('/api/file/<int:file_id>', methods=['GET'])
 @login_required
 def get_single_file(file_id):
     file = Files.query.get_or_404(file_id)
-
-    # 確認此檔案是屬於目前登入的使用者
     if file.user_id != current_user.id:
-        abort(403)  # Forbidden
+        abort(403)  # 禁止查看非自己文件
 
-    # 將 BLOB 轉成 base64 字串
     file_data_base64 = base64.b64encode(file.file_data).decode('utf-8')
-
     return jsonify({
         'id': file.id,
         'file_name': file.file_name,
         'file_type': file.file_type,
-        # 'file_data_base64': file_data_base64,
+        'file_data_base64': file_data_base64,
         'upload_time': file.upload_time.isoformat() if file.upload_time else None
     })
 
+
+@blueprint.route('/bounding/<int:file_id>')
+@login_required
+def testbounding(file_id):
+    return render_template('home/bounding_box.html', file_id=file_id)
+
+# 取得歷史文件的資料(圖片、)
+@blueprint.route('/api/file_data/<int:file_id>', methods=['GET'])
+@login_required
+def get_file_and_ocr_data(file_id):
+    # 取得檔案資訊並檢查權限
+    file = Files.query.get_or_404(file_id)
+    if file.user_id != current_user.id:
+        abort(403)
+
+    # 編碼圖片資料
+    file_data_base64 = base64.b64encode(file.file_data).decode('utf-8')
+
+    # 查詢 OCR 資料（可多筆）
+    ocr_data = OCRData.query.filter_by(file_id=file_id).all()
+    ocr_data_list = [
+        {
+            # 'file_id': item.file_id,
+            'x': item.x,
+            'y': item.y,
+            'width': item.width,
+            'height': item.height,
+            'id': item.item_id,
+            'mode': item.mode,
+            'name': item.item_name
+        }
+        for item in ocr_data
+    ]
+
+    # 整合回傳
+    return jsonify({
+        'file': {
+            'id': file.id,
+            # 'file_name': file.file_name,
+            'file_type': file.file_type,
+            'file_data_base64': file_data_base64,#file_data_base64
+            # 'upload_time': file.upload_time.isoformat() if file.upload_time else None
+        },
+        'ocr_data': ocr_data_list
+    })
 
 # Helper - Extract current page name from request
 

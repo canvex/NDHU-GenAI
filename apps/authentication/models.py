@@ -157,22 +157,14 @@ class OCRData(db.Model):
     def to_dict(self):
         """轉換為字典格式"""
         return {
-            'id': self.id,
             'file_id': self.file_id,
-            'item_id': self.item_id,
-            'name': self.item_name,
-            'position': {
-                'x': self.x,
-                'y': self.y,
-                'width': self.width,
-                'height': self.height
-            },
-            'center': {
-                'x': self.center_x,
-                'y': self.center_y
-            },
+            'height': self.height,
+            'width': self.width,
+            'x': self.x,
+            'y': self.y,
+            'id': self.item_id,
             'mode': self.mode,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'name': self.item_name
         }
 
     def __repr__(self):
