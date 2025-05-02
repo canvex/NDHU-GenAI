@@ -147,33 +147,46 @@
 
 
 
-      <form id="uploadForm" onsubmit="return false;" style="padding-left: 200px;padding-right:200px; text-align:center;">
+      <form id="uploadForm" onsubmit="return false;"
+        style="padding-left: 150px;padding-right:150px; text-align:center;">
         <div class="card-body">
-        </div>
-        <div class="form-group">
-          <label for="fileInput">上傳檔案</label>
-          <div class="input-group">
-            <div class="custom-file" style="padding-left: 100px;padding-right: 100px;">
-              <input type="file" class="custom-file-input" id="fileInput" name="file">
-              <label class="custom-file-label" for="fileInput" style="text-align: left;">請選擇檔案</label>
+
+          <div class="form-group">
+            <label for="fileInput">上傳檔案</label>
+            <div class="input-group">
+              <div class="custom-file" style="padding-left: 100px;padding-right: 100px;">
+                <input type="file" class="custom-file-input" id="fileInput" name="file">
+                <label class="custom-file-label" for="fileInput" style="text-align: left;">請選擇檔案</label>
+              </div>
+              <div class="input-group-append">
+                <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
+              </div>
             </div>
-            <div class="input-group-append">
-              <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
+
+
+
+
+            <br /><br />
+            <div class="row justify-content-center" style="gap: 5px; text-align: center;">
+              <div class="col-auto">
+                <button onclick="downloadImage()" class="btn btn-info">儲存檔案</button>
+              </div>
+              <div class="col-auto">
+                <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
+              </div>
+              <div class="col-auto">
+                <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
+              </div>
+              <div class="col-auto">
+                <input type="file" id="importFile" accept="application/json" onchange="importData(event)"
+                  class="form-control-file" />
+              </div>
             </div>
-          </div>
 
 
-
-          <br /><br />
-          <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
-          <input type="file" id="importFile" accept="application/json" onchange="importData(event)" />
-
-
-          <br /><br />
-          <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
-          <br /><br />
-          <!-- 模式切換開關區域 -->
-          <!-- <div id="mode-switcher">
+            <br /><br />
+            <!-- 模式切換開關區域 -->
+            <!-- <div id="mode-switcher">
             <label for="mode-toggle">模式切換：</label>
             <input type="checkbox" id="mode-toggle" />
             <span id="mode-status">目前是問題模式</span>
@@ -188,116 +201,117 @@
           </div> -->
 
 
-          <style>
-            /* Toggle 開關樣式 */
-            .switch {
-              position: relative;
-              display: inline-block;
-              width: 60px;
-              height: 30px;
-              margin-right: 10px;
-            }
-          
-            .switch input {
-              opacity: 0;
-              width: 0;
-              height: 0;
-            }
-          
-            .slider {
-              position: absolute;
-              cursor: pointer;
-              background-color: #ccc;
-              border-radius: 34px;
-              top: 0; left: 0;
-              right: 0; bottom: 0;
-              transition: 0.4s;
-            }
-          
-            .slider:before {
-              content: "";
-              position: absolute;
-              height: 22px;
-              width: 22px;
-              left: 4px;
-              bottom: 4px;
-              background-color: white;
-              border-radius: 50%;
-              transition: 0.4s;
-            }
-          
-            input:checked + .slider {
-              background-color: #4CAF50;
-            }
-          
-            input:checked + .slider:before {
-              transform: translateX(30px);
-            }
-          
-            /* 圓角開關 */
-            .slider.round {
-              border-radius: 34px;
-            }
-          
-            .slider.round:before {
-              border-radius: 50%;
-            }
-          </style>
-          
-          <div id="mode-switcher">
-            <label class="switch">
-              <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
-              <span class="slider round"></span>
-            </label>
-            <span id="mode-status">目前是問題模式</span>
-          </div>
-          
-         
-          
-          <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
+            <style>
+              /* Toggle 開關樣式 */
+              .switch {
+                position: relative;
+                display: inline-block;
+                width: 60px;
+                height: 30px;
+                margin-right: 10px;
+              }
 
-          <!-- 右鍵選單 -->
-          <ul id="contextMenu" style="
+              .switch input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+              }
+
+              .slider {
+                position: absolute;
+                cursor: pointer;
+                background-color: #ccc;
+                border-radius: 34px;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                transition: 0.4s;
+              }
+
+              .slider:before {
+                content: "";
+                position: absolute;
+                height: 22px;
+                width: 22px;
+                left: 4px;
+                bottom: 4px;
+                background-color: white;
+                border-radius: 50%;
+                transition: 0.4s;
+              }
+
+              input:checked+.slider {
+                background-color: #4CAF50;
+              }
+
+              input:checked+.slider:before {
+                transform: translateX(30px);
+              }
+
+              /* 圓角開關 */
+              .slider.round {
+                border-radius: 34px;
+              }
+
+              .slider.round:before {
+                border-radius: 50%;
+              }
+            </style>
+
+            <div id="mode-switcher">
+              <label class="switch">
+                <input type="checkbox" id="mode-toggle" onchange="toggleMode()">
+                <span class="slider round"></span>
+              </label>
+              <span id="mode-status">目前是問題模式</span>
+            </div>
+
+
+
+            <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
+
+            <!-- 右鍵選單 -->
+            <ul id="contextMenu" style="
           display: none;
           position: absolute;
           background: white;
           border: 1px solid gray;
-          padding: 5px;"
-          >
-        
-            <div id="editBtn">✏️ 編輯</div>
-            <div id="deleteBtn">🗑️ 刪除</div>
-            <li>自動填入答案：</li>
-            <ul id="answerOptions" style="padding-left: 15px"></ul>
-          </ul>
+          padding: 5px;">
 
-          <div id="loading">
-            <div class="spinner"></div>
-            <span>處理中，請稍候...</span>
-          </div>
-          <pre id="output"></pre>
-          <canvas id="canvas"></canvas>
-          <br />
-          <div class="sidebar" hidden>
-            <h3>問題 (Questions)</h3>
-            <ul id="questionList"></ul>
-            <h3>回答 (Answers)</h3>
-            <ul id="answerList"></ul>
-          </div>
+              <div id="editBtn">✏️ 編輯</div>
+              <div id="deleteBtn">🗑️ 刪除</div>
+              <li>自動填入答案：</li>
+              <ul id="answerOptions" style="padding-left: 15px"></ul>
+            </ul>
 
+            <div id="loading">
+              <div class="spinner"></div>
+              <span>處理中，請稍候...</span>
+            </div>
+            <pre id="output"></pre>
+            <canvas id="canvas"></canvas>
+            <br />
+            <div class="sidebar" hidden>
+              <h3>問題 (Questions)</h3>
+              <ul id="questionList"></ul>
+              <h3>回答 (Answers)</h3>
+              <ul id="answerList"></ul>
+            </div>
 
 
 
 
 
-          <!-- /.card-body -->
+
+            <!-- /.card-body -->
 
 
-          <!-- <a href="{{ url_for('home_blueprint.doc_fill') }}" class="btn btn-primary float-sm-right">
+            <!-- <a href="{{ url_for('home_blueprint.doc_fill') }}" class="btn btn-primary float-sm-right">
             確認
           </a> -->
 
-
+          </div>
       </form>
 
 
@@ -413,30 +427,30 @@
   });
 
   img.onload = function () {
-   // 固定 canvas 實際解析度為 1000x對應高（依圖片比例）
-const fixedCanvasWidth = 1000;
-const originalWidth = img.naturalWidth;
-const originalHeight = img.naturalHeight;
+    // 固定 canvas 實際解析度為 1000x對應高（依圖片比例）
+    const fixedCanvasWidth = 1000;
+    const originalWidth = img.naturalWidth;
+    const originalHeight = img.naturalHeight;
 
-// 計算縮放比例，依圖片原始比例計算對應高
-const scale = fixedCanvasWidth / originalWidth;
-const scaledHeight = originalHeight * scale;
+    // 計算縮放比例，依圖片原始比例計算對應高
+    const scale = fixedCanvasWidth / originalWidth;
+    const scaledHeight = originalHeight * scale;
 
-// 設定 canvas 實際解析度（畫質）
-canvas.width = fixedCanvasWidth;
-canvas.height = scaledHeight;
+    // 設定 canvas 實際解析度（畫質）
+    canvas.width = fixedCanvasWidth;
+    canvas.height = scaledHeight;
 
-// 讓 CSS 支援 RWD
-canvas.style.width = "100%";         // 讓畫布在視覺上填滿容器
-canvas.style.maxWidth = "1000px";    // 限制最大寬度為 1000px
-canvas.style.height = "auto";        // 自動維持比例
-canvas.style.display = "block";
-canvas.style.margin = "0 auto";
+    // 讓 CSS 支援 RWD
+    canvas.style.width = "100%";         // 讓畫布在視覺上填滿容器
+    canvas.style.maxWidth = "1000px";    // 限制最大寬度為 1000px
+    canvas.style.height = "auto";        // 自動維持比例
+    canvas.style.display = "block";
+    canvas.style.margin = "0 auto";
 
-// 使用等比例縮放繪圖
-ctx.setTransform(scale, 0, 0, scale, 0, 0);  // 讓所有繪製動作都自動縮放
-ctx.clearRect(0, 0, originalWidth, originalHeight); // 清空畫布
-ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮放
+    // 使用等比例縮放繪圖
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);  // 讓所有繪製動作都自動縮放
+    ctx.clearRect(0, 0, originalWidth, originalHeight); // 清空畫布
+    ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮放
 
 
     // 在這裡繪製框線或文字等其他圖形
@@ -767,6 +781,9 @@ ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮�
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 2;
+    ctx.setTransform(scale, 0, 0, scale, 0, 0); // ➤ 加上這行（與 img.onload 相同）
+    ctx.clearRect(0, 0, canvas.width / scale, canvas.height / scale); // ➤ 用原解析度清除畫面
+    ctx.drawImage(img, 0, 0); // ➤ 重新繪圖（不要加 width/height 參數）
 
     fields.forEach((f) => {
       const x = f.x * canvas.width;
