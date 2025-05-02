@@ -118,7 +118,6 @@
         <span id="mode-status">目前是問題模式</span>
       </div>
 
-    
       <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
 
       <!-- 右鍵選單 -->
@@ -199,8 +198,11 @@
       fetch("/api/profile")
         .then((response) => response.json())
         .then((data) => {
-          // 使用 Object.values() 提取所有的值，並將其加入 answerCandidates 陣列
-          answerCandidates.push(...Object.values(data));
+          // 過濾掉 null 或空字串，再展開加入陣列
+          const filteredValues = Object.values(data).filter(
+            (value) => value !== null && value !== ""
+          );
+          answerCandidates.push(...filteredValues);
           console.log(answerCandidates); // 確認資料已經加入陣列
         })
         .catch((error) => console.error("Error fetching data:", error));
