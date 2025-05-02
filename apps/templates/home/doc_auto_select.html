@@ -426,35 +426,29 @@
   });
 
   img.onload = function () {
-  // 原始圖片尺寸
-  const originalWidth = img.naturalWidth;
-  const originalHeight = img.naturalHeight;
+    // 設定 canvas 實際大小為圖片原始大小
+    const originalWidth = img.naturalWidth;
+    const originalHeight = img.naturalHeight;
 
-  // 設定畫布固定寬度（解析度用來畫圖，與 CSS 分開）
-  const fixedCanvasWidth = 1000;
-  const scale = fixedCanvasWidth / originalWidth;
-  const fixedCanvasHeight = originalHeight * scale;
+    const maxWidth = window.innerWidth * 0.7;
+    const imgScale = maxWidth / originalWidth; // 計算縮放比例
 
-  // 設定 canvas 實際解析度（像素大小）
-  canvas.width = fixedCanvasWidth;
-  canvas.height = fixedCanvasHeight;
+    // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
+    canvas.width = originalWidth;
+    canvas.height = originalHeight;
 
-  // 設定 CSS RWD 樣式
-  canvas.style.width = "100%";
-  canvas.style.maxWidth = "1000px";
-  canvas.style.height = "auto";
-  canvas.style.display = "block";
-  canvas.style.margin = "0 auto";  // 水平置中
+    // 根據縮放比例繪製圖片
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      originalWidth * imgScale,
+      originalHeight * imgScale
+    );
 
-  // 使用 setTransform 自動縮放圖像與所有畫圖操作
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.clearRect(0, 0, originalWidth, originalHeight);
-  ctx.drawImage(img, 0, 0);
-
-  // 重新繪製框線等
-  redrawCanvas();
-};
-
+    // 在這裡繪製框線或文字等其他圖形
+    redrawCanvas();
+  };
 
   // 當按下滑鼠時
   canvas.addEventListener("mousedown", (e) => {
