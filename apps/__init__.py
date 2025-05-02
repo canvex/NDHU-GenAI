@@ -4,6 +4,9 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from importlib import import_module
+from dotenv import load_dotenv
+load_dotenv()
+
 
 # 初始化 MySQL 資料庫連線
 db = SQLAlchemy()
