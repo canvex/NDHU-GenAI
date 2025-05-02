@@ -7,6 +7,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from apps import db, login_manager
 from apps.authentication.util import hash_pass
+from apps.authentication.crypto_util import encrypt, decrypt
 
 class Users(db.Model, UserMixin):
     __tablename__ = 'Users'
@@ -34,15 +35,66 @@ class UsersProfile(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('Users.id', ondelete='CASCADE'), nullable=False, unique=True)
-    name = db.Column(db.String(64), nullable=True, default=None)  # 改為 default=None
-    national_id = db.Column(db.String(10), nullable=True, default=None)
+
+    name = db.Column(db.String(64), nullable=True, default=None)
     gender = db.Column(db.String(1), nullable=True, default=None)
     birth_date = db.Column(db.String(10), nullable=True, default=None)
-    phone = db.Column(db.String(15), nullable=True, default=None)
-    mobile = db.Column(db.String(15), nullable=True, default=None)
-    address = db.Column(db.String(255), nullable=True, default=None)
-    education = db.Column(db.String(64), nullable=True, default=None)
-    email = db.Column(db.String(128), nullable=True, default=None)
+
+    _national_id = db.Column("national_id", db.Text, nullable=True, default=None)
+    _phone = db.Column("phone", db.Text, nullable=True, default=None)
+    _mobile = db.Column("mobile", db.Text, nullable=True, default=None)
+    _address = db.Column("address", db.Text, nullable=True, default=None)
+    _education = db.Column("education", db.Text, nullable=True, default=None)
+    _email = db.Column("email", db.Text, nullable=True, default=None)
+
+    # 屬性存取（Getter/Setter）
+    @property
+    def national_id(self):
+        return decrypt(self._national_id)
+
+    @national_id.setter
+    def national_id(self, value):
+        self._national_id = encrypt(value)
+
+    @property
+    def phone(self):
+        return decrypt(self._phone)
+
+    @phone.setter
+    def phone(self, value):
+        self._phone = encrypt(value)
+
+    @property
+    def mobile(self):
+        return decrypt(self._mobile)
+
+    @mobile.setter
+    def mobile(self, value):
+        self._mobile = encrypt(value)
+
+    @property
+    def address(self):
+        return decrypt(self._address)
+
+    @address.setter
+    def address(self, value):
+        self._address = encrypt(value)
+
+    @property
+    def education(self):
+        return decrypt(self._education)
+
+    @education.setter
+    def education(self, value):
+        self._education = encrypt(value)
+
+    @property
+    def email(self):
+        return decrypt(self._email)
+
+    @email.setter
+    def email(self, value):
+        self._email = encrypt(value)
 
     def __repr__(self):
         return f"<UsersProfile user_id={self.user_id} name={self.name}>"
