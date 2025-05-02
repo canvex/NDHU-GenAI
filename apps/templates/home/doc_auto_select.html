@@ -98,12 +98,23 @@
     border-left: 1px solid #ccc;
   }
 
-  canvas {
+  /* canvas {
     border: 1px solid black;
     cursor: crosshair;
     max-width: 90%;
     height: auto;
-  }
+  } */
+
+  canvas {
+  display: block;
+  width: 100%;
+  max-width: 1000px;
+  height: auto;
+  margin: 0 auto;
+  border: 1px solid black;
+  cursor: crosshair;
+}
+
 
   ul {
     list-style-type: none;
@@ -380,7 +391,6 @@
   });
 
 
-
   const upload = document.getElementById("fileInput");
   const canvas = document.getElementById("canvas");
   const ctx = canvas.getContext("2d");
@@ -427,35 +437,28 @@
   });
 
   img.onload = function () {
-    // 固定 canvas 實際解析度為 1000x對應高（依圖片比例）
-    const fixedCanvasWidth = 1000;
-    const originalWidth = img.naturalWidth;
-    const originalHeight = img.naturalHeight;
+  const originalWidth = img.naturalWidth;
+  const originalHeight = img.naturalHeight;
 
-    // 計算縮放比例，依圖片原始比例計算對應高
-    const scale = fixedCanvasWidth / originalWidth;
-    const scaledHeight = originalHeight * scale;
+  const fixedCanvasWidth = 1000;
+  scale = fixedCanvasWidth / originalWidth;  // ⬅️ 注意：讓 scale 是全域變數
+  const fixedCanvasHeight = originalHeight * scale;
 
-    // 設定 canvas 實際解析度（畫質）
-    canvas.width = fixedCanvasWidth;
-    canvas.height = scaledHeight;
+  canvas.width = fixedCanvasWidth;
+  canvas.height = fixedCanvasHeight;
 
-    // 讓 CSS 支援 RWD
-    canvas.style.width = "100%";         // 讓畫布在視覺上填滿容器
-    canvas.style.maxWidth = "1000px";    // 限制最大寬度為 1000px
-    canvas.style.height = "auto";        // 自動維持比例
-    canvas.style.display = "block";
-    canvas.style.margin = "0 auto";
+  canvas.style.width = "100%";
+  canvas.style.maxWidth = "1000px";
+  canvas.style.height = "auto";
+  canvas.style.display = "block";
+  canvas.style.margin = "0 auto";
 
-    // 使用等比例縮放繪圖
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);  // 讓所有繪製動作都自動縮放
-    ctx.clearRect(0, 0, originalWidth, originalHeight); // 清空畫布
-    ctx.drawImage(img, 0, 0); // 用原始大小繪圖，實際自動被 scale 縮放
+  // ✅ 這裡不要畫圖 → 把畫圖工作留給 redrawCanvas
+  redrawCanvas();
+};
 
 
-    // 在這裡繪製框線或文字等其他圖形
-    redrawCanvas();
-  };
+
 
   // 當按下滑鼠時
   canvas.addEventListener("mousedown", (e) => {
@@ -781,9 +784,6 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     ctx.lineWidth = 2;
-    ctx.setTransform(scale, 0, 0, scale, 0, 0); // ➤ 加上這行（與 img.onload 相同）
-    ctx.clearRect(0, 0, canvas.width / scale, canvas.height / scale); // ➤ 用原解析度清除畫面
-    ctx.drawImage(img, 0, 0); // ➤ 重新繪圖（不要加 width/height 參數）
 
     fields.forEach((f) => {
       const x = f.x * canvas.width;
@@ -983,18 +983,18 @@
     document.getElementById("output").textContent = ""; // 清空之前的結果
 
     fetch("/doc_select", {
-      method: "POST",
-      body: formData,
-    })
-      .then((response) => {
-        if (response.status === 403) {
-          throw new Error("403"); // 手動丟出錯誤，讓它進 catch
-        }
-        return response.json(); // 其他狀況正常處理
-      })
-      .then((data) => {
-        // 隱藏 loading 動畫
-        document.getElementById("loading").style.display = "none";
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => {
+            if (response.status === 403) {
+              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
+            }
+            return response.json(); // 其他狀況正常處理
+          })
+          .then((data) => {
+            // 隱藏 loading 動畫
+            document.getElementById("loading").style.display = "none";
 
         // 檢查是否有錯誤訊息
         if (data.error) {
