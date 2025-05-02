@@ -9,7 +9,7 @@ from flask import render_template, request, redirect, url_for, jsonify, current_
 
 from werkzeug.utils import secure_filename
 from apps import db
-from apps.authentication.models import Files, Profile, OCRData, UsersProfile
+from apps.authentication.models import Files, OCRData, UsersProfile
 
 from flask import flash  # 如果還沒有導入
 from flask import abort
