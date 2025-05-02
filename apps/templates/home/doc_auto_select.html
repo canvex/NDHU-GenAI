@@ -437,34 +437,27 @@
   });
 
   img.onload = function () {
-  // 原始圖片尺寸
   const originalWidth = img.naturalWidth;
   const originalHeight = img.naturalHeight;
 
-  // 設定畫布固定寬度（解析度用來畫圖，與 CSS 分開）
   const fixedCanvasWidth = 1000;
-  const scale = fixedCanvasWidth / originalWidth;
+  scale = fixedCanvasWidth / originalWidth;  // ⬅️ 注意：讓 scale 是全域變數
   const fixedCanvasHeight = originalHeight * scale;
 
-  // 設定 canvas 實際解析度（像素大小）
   canvas.width = fixedCanvasWidth;
   canvas.height = fixedCanvasHeight;
 
-  // 設定 CSS RWD 樣式
   canvas.style.width = "100%";
   canvas.style.maxWidth = "1000px";
   canvas.style.height = "auto";
   canvas.style.display = "block";
-  canvas.style.margin = "0 auto";  // 水平置中
+  canvas.style.margin = "0 auto";
 
-  // 使用 setTransform 自動縮放圖像與所有畫圖操作
-  ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.clearRect(0, 0, originalWidth, originalHeight);
-  ctx.drawImage(img, 0, 0);
-
-  // 重新繪製框線等
+  // ✅ 這裡不要畫圖 → 把畫圖工作留給 redrawCanvas
   redrawCanvas();
 };
+
+
 
 
   // 當按下滑鼠時
