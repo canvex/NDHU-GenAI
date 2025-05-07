@@ -367,15 +367,15 @@ def get_profile():
         if profile:
             user_profile = {
                 'email': current_user.email,
-                'name': profile.name,
-                'education': profile.education,
+                '姓名': profile.name,
+                '學歷': profile.education,
                 # 'student_id': profile.student_id,
-                'phone': profile.phone,
-                "personal_id": profile.national_id,
-                "gender":profile.gender,
-                "birthday":profile.birth_date,
-                "mobile":profile.mobile,
-                "address":profile.address
+                '電話': profile.phone,
+                "身分證號碼": profile.national_id,
+                "性別": profile.gender,
+                "生日": profile.birth_date,
+                "手機": profile.mobile,
+                "地址": profile.address
             }
             return jsonify(user_profile)
         else:

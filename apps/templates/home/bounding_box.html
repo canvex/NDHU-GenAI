@@ -217,31 +217,62 @@
           reader.readAsDataURL(file);
         }
       });
+      document.addEventListener("DOMContentLoaded", () => {
+        fetch(`/api/file_data/{{ file_id }}`)
+          .then((res) => {
+            if (!res.ok) {
+              if (res.status === 403) {
+                alert("無權存取這個檔案。");
+              } else if (res.status === 404) {
+                alert("無此檔案。");
+              }
+              throw new Error("錯誤的檔案請求");
+            }
+            return res.json();
+          })
+          .then((data) => {
+            // 顯示圖片
+            img = new Image();
+            img.src = `data:${data.file.file_type};base64,${data.file.file_data_base64}`;
+            //  img.onload = () => {
+            //   const canvas = document.getElementById("canvas");
+            //   canvas.width = img.width;
+            //   canvas.height = img.height;
+            //   canvas.getContext("2d").drawImage(img, 0, 0);
+            // };
+            img.onload = function () {
+              // 設定 canvas 實際大小為圖片原始大小
+              const originalWidth = img.naturalWidth;
+              const originalHeight = img.naturalHeight;
 
-      img.onload = function () {
-        // 設定 canvas 實際大小為圖片原始大小
-        const originalWidth = img.naturalWidth;
-        const originalHeight = img.naturalHeight;
+              const maxWidth = window.innerWidth * 0.7;
+              const imgScale = maxWidth / originalWidth; // 計算縮放比例
 
-        const maxWidth = window.innerWidth * 0.7;
-        const imgScale = maxWidth / originalWidth; // 計算縮放比例
+              // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
+              canvas.width = originalWidth;
+              canvas.height = originalHeight;
 
-        // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
-        canvas.width = originalWidth;
-        canvas.height = originalHeight;
+              // 根據縮放比例繪製圖片
+              ctx.drawImage(
+                img,
+                0,
+                0,
+                originalWidth * imgScale,
+                originalHeight * imgScale
+              );
+              handleApiResponse(data); // 🔹 呼叫處理函式
+              // 在這裡繪製框線或文字等其他圖形
+              redrawCanvas();
+            };
+            // handleApiResponse(data); // 🔹 呼叫處理函式
 
-        // 根據縮放比例繪製圖片
-        ctx.drawImage(
-          img,
-          0,
-          0,
-          originalWidth * imgScale,
-          originalHeight * imgScale
-        );
-
-        // 在這裡繪製框線或文字等其他圖形
-        redrawCanvas();
-      };
+            // updateFieldsWithRelativeCoordinates(data.ocr_data.ocr_data);
+            // updateIdCountersFromFields(data.ocr_data.ocr_data); // ✅ 加這行
+          })
+          .catch((err) => {
+            console.error(err);
+          });
+      });
 
       // 當按下滑鼠時
       canvas.addEventListener("mousedown", (e) => {
@@ -679,15 +710,24 @@
       }
       // 匯出框選資料
       function exportData() {
-        const absoluteFields = fields.map((f) => ({
-          mode: f.mode, // 修正這裡，確保每個框都有自己的模式
-          name: f.name,
-          x: Math.round(f.x * img.width),
-          y: Math.round(f.y * img.height),
-          width: Math.round(f.width * img.width),
-          height: Math.round(f.height * img.height),
-          id: f.id,
-        }));
+        const absoluteFields = fields.map((f) => {
+          const absX = Math.round(f.x * img.width);
+          const absY = Math.round(f.y * img.height);
+          const absWidth = Math.round(f.width * img.width);
+          const absHeight = Math.round(f.height * img.height);
+
+          return {
+            mode: f.mode, // 確保每個框都有自己的模式
+            name: f.name,
+            x: absX,
+            y: absY,
+            width: absWidth,
+            height: absHeight,
+            id: f.id,
+            center_x: Math.round(absX + absWidth / 2),
+            center_y: Math.round(absY + absHeight / 2),
+          };
+        });
 
         const dataStr =
           "data:text/json;charset=utf-8," +
