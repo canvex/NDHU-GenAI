@@ -216,7 +216,7 @@ def doc_upload():
     return render_template('home/doc_upload.html', segment='doc_upload')
 
 
-# 文件上傳
+# 文件上傳與儲存
 @blueprint.route('/doc_select', methods=['POST'])
 @login_required
 def doc_select():
@@ -225,13 +225,48 @@ def doc_select():
     else:
         user_id = None
 
+     # === 區分 JSON 資料更新請求 ===
+    if request.content_type == 'application/json':
+        try:
+            data = request.get_json()
+            ocr_content = data.get('ocr_data')
+            file_id = data.get('file_id')
+            
+            if not ocr_content or not file_id:
+                return jsonify({'error': '缺少必要參數: ocr_data 或 file_id'}), 400
+                
+            # 檢查檔案是否存在
+            file_record = Files.query.get(file_id)
+            if not file_record:
+                return jsonify({'error': '指定的檔案不存在'}), 404
+                
+            # 刪除舊的 OCR 資料
+            OCRData.query.filter_by(file_id=file_id).delete()
+            
+            # 創建新的 OCR 記錄
+            ocr_records = OCRData.create_from_ocr_content(
+                file_id=file_id,
+                ocr_content=ocr_content,
+                user_id=user_id
+            )
+            db.session.add_all(ocr_records)
+            db.session.commit()
+            
+            return jsonify({'message': ' 檔案資料更新成功'}), 200
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"OCR 資料更新錯誤: {str(e)}", exc_info=True)
+            return jsonify({'error': f'伺服器錯誤: {str(e)}'}), 500
+    
+
     # === 基本檢查 ===
     if 'file' not in request.files:
-        return jsonify({'error': 'No file part in request'}), 400
+        return jsonify({'error': '請求中缺少檔案部分'}), 400
 
-    file = request.files['file']
+    file = request.files['file']  # 只有在檔案上傳時才會賦值
     if file.filename == '':
-        return jsonify({'error': 'No selected file'}), 400
+        return jsonify({'error': '未選擇檔案'}), 400
     if not allowed_file(file.filename):
         return jsonify({'error': 'File type not allowed'}), 400
 
@@ -290,7 +325,6 @@ def doc_select():
             ocr_content = json.load(f)
 
         # === 儲存 OCR 資料 ===
-        # 創建多條OCR記錄
         ocr_records = OCRData.create_from_ocr_content(
             file_id=new_file.id,
             ocr_content=ocr_content,
@@ -301,11 +335,13 @@ def doc_select():
 
         # 構建與 /upload 路由一致的響應格式
         response_data = {
-            'filename': file.filename,  # 使用原始檔名
+            'status': 'success',
+            'filename': file.filename,
             'size_kb': round(file_size / 1024, 2),
             'gpt_response': gpt_response,
             'ocr_status': ocr_status,
-            'ocr_data': ocr_content  # 保持與 /upload 相同的原始格式
+            'ocr_data': ocr_content,
+            'file_id': new_file.id  # 新增返回 file_id
         }
 
         return jsonify(response_data), 200

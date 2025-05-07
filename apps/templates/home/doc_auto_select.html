@@ -180,7 +180,7 @@
             <br /><br />
             <div class="row justify-content-center" style="gap: 5px; text-align: center;">
               <div class="col-auto">
-                <button onclick="downloadImage()" class="btn btn-info">儲存檔案</button>
+                <button onclick="saveOCRData()" class="btn btn-info">儲存文件資料</button>
               </div>
               <div class="col-auto">
                 <button onclick="downloadImage()" class="btn btn-info">下載圖片</button>
@@ -354,24 +354,57 @@
 </script> -->
 
 <script>
-  // let isAnswerMode = false; // 初始為問題模式
+  // 新增全域變數來儲存當前 file_id
+  let currentFileId = null;
 
-  // // 取得開關與狀態顯示區域
-  // const modeToggle = document.getElementById("mode-toggle");
-  // const modeStatus = document.getElementById("mode-status");
+  // 修改儲存檔案按鈕的功能
+  async function saveOCRData() {
+    if (!currentFileId) {
+        alert("請先上傳檔案並等待處理完成");
+        return;
+    }
 
-  // // 監聽開關改變事件
-  // modeToggle.addEventListener("change", () => {
-  //   isAnswerMode = modeToggle.checked; // 當開關開啟時是答案模式，否則是問題模式
+    try {
+        // 準備要傳送的資料
+        const postData = {
+            ocr_data: fields.map(f => ({
+                mode: f.mode,
+                name: f.name,
+                x: Math.round(f.x * img.width),
+                y: Math.round(f.y * img.height),
+                width: Math.round(f.width * img.width),
+                height: Math.round(f.height * img.height),
+                id: f.id,
+                center_x: f.x + f.width/2,
+                center_y: f.y + f.height/2
+            })),
+            file_id: currentFileId
+        };
 
-  //   // 更新顯示的模式
-  //   if (isAnswerMode) {
-  //     modeStatus.textContent = "目前是答案模式";
-  //   } else {
-  //     modeStatus.textContent = "目前是問題模式";
-  //   }
-  // });
+        // 顯示 loading
+        document.getElementById("loading").style.display = "flex";
 
+        const response = await fetch("/doc_select", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "儲存失敗");
+        }
+
+        alert("資料儲存成功！");
+    } catch (error) {
+        console.error("儲存錯誤:", error);
+        alert(`儲存失敗: ${error.message}`);
+    } finally {
+        document.getElementById("loading").style.display = "none";
+    }
+}
 
   let isAnswerMode = false; // 初始為問題模式
 
@@ -517,7 +550,6 @@ img.onload = function () {
         dragOffsetX = x - selectedField.x;
         dragOffsetY = y - selectedField.y;
       }
-      canvas.addEventListener("mousemove", onMouseMove);
     } else {
       // 開始繪製新的框選區域
       startX = x;
@@ -684,7 +716,6 @@ img.onload = function () {
     resizeCorner = null;
     selectedField = null;
 
-    canvas.removeEventListener("mousemove", onMouseMove);
     redrawCanvas(); // 重新繪製畫布，顯示更新後的框選區域
   });
 
@@ -1004,63 +1035,56 @@ img.onload = function () {
     .getElementById("exportBtn")
     .addEventListener("click", exportData, false);
 
-  function uploadImage() {
-    let fileInput = document.getElementById("fileInput").files[0];
+  
+
+// 修改 uploadImage 函數，在成功上傳後儲存 file_id
+async function uploadImage() {
+    const fileInput = document.getElementById("fileInput").files[0];
     if (!fileInput) {
-      alert("請選擇圖片");
-      return;
+        alert("請先選擇檔案");
+        return;
     }
 
-    let formData = new FormData();
-    formData.append("file", fileInput);
-
     // 顯示 loading 動畫
-    document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
-    document.getElementById("output").textContent = ""; // 清空之前的結果
+    document.getElementById("loading").style.display = "flex";
+    
+    try {
+        const formData = new FormData();
+        formData.append("file", fileInput);
 
-    fetch("/doc_select", {
-          method: "POST",
-          body: formData,
-        })
-          .then((response) => {
-            if (response.status === 403) {
-              throw new Error("403"); // 手動丟出錯誤，讓它進 catch
-            }
-            return response.json(); // 其他狀況正常處理
-          })
-          .then((data) => {
-            // 隱藏 loading 動畫
-            document.getElementById("loading").style.display = "none";
+        const response = await fetch("/doc_select", {
+            method: "POST",
+            body: formData
+        });
 
-        // 檢查是否有錯誤訊息
-        if (data.error) {
-          alert("錯誤: " + data.error); // 顯示錯誤訊息
-        } else {
-          try {
-            console.log("調用 handleApiResponse 之前的資料:", data);
-            handleApiResponse(data); // 🔹 呼叫處理函式
-            // document.getElementById("output").textContent = JSON.stringify(
-            //   data,
-            //   null,
-            //   2
-            // ); // 顯示 JSON 結果
-          } catch (error) {
-            console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
-            alert("處理回應時發生錯誤，請查看 Console 訊息！");
-          }
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || "上傳失敗");
         }
-      })
-      .catch((error) => {
-        console.error("錯誤:", error);
-        // 隱藏 loading 動畫
+
+        const data = await response.json();
+        
+        // 儲存返回的 file_id
+        if (data.file_id) {
+            currentFileId = data.file_id;
+            console.log("當前 file_id 已設定為:", currentFileId);
+        } else {
+            throw new Error("伺服器未返回 file_id");
+        }
+
+        // 處理 OCR 數據
+        if (data.ocr_data) {
+            handleApiResponse(data);
+        }
+        
+    } catch (error) {
+        console.error("上傳錯誤:", error);
+        alert(`上傳失敗: ${error.message}`);
+    } finally {
         document.getElementById("loading").style.display = "none";
-        if (error.message === "403") {
-          alert("帳號已登出，請重新登入");
-        } else {
-          alert("上傳失敗，請稍後再試！\n錯誤訊息：" + error.message);
-        }
-      });
-  }
+    }
+}
+
   function handleApiResponse(data) {
     console.log("🔹 API 回應:", data);
 
