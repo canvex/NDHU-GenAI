@@ -35,7 +35,7 @@ def index():
 @blueprint.route('/doc_auto_select')
 #@login_required  # 確保使用者已登入
 def doc_auto_select():
-    return render_template('home/doc_auto_select.html')
+    return render_template('home/doc_auto_select.html', mode="first_upload", file_id=None)
 
 @blueprint.route('/test')
 #@login_required  # 確保使用者已登入
@@ -119,7 +119,7 @@ def profile_edit():
 
 @blueprint.route('/bounding_box')
 def bounding():
-    return render_template('home/bounding_box.html')
+    return render_template('home/bounding_box.html', mode="first_upload", file_id=None)
 
 
 # 允許的文件類型
@@ -460,10 +460,10 @@ def get_single_file(file_id):
     })
 
 
-@blueprint.route('/bounding/<int:file_id>')
+@blueprint.route('/file/<int:file_id>')
 @login_required
 def testbounding(file_id):
-    return render_template('home/bounding_box.html', file_id=file_id)
+    return render_template('home/doc_auto_select.html',mode="history", file_id=file_id)
 
 # 取得歷史文件的資料(圖片、)
 @blueprint.route('/api/file_data/<int:file_id>', methods=['GET'])
