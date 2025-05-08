@@ -12,7 +12,7 @@ if not api_key:
     raise ValueError("❌ 環境變數 ROBOFLOW_API_KEY 未設定")
 
 # Roboflow Model 設定
-MODEL_ID = "my-first-project-ksnki/5"
+MODEL_ID = "my-first-project-ksnki/6"
 API_URL = f"https://detect.roboflow.com/{MODEL_ID}?api_key={api_key}"
 
 

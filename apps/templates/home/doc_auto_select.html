@@ -161,19 +161,19 @@
       <form id="uploadForm" onsubmit="return false;"
         style="padding-left: 150px;padding-right:150px; text-align:center;">
         <div class="card-body">
-
+          {% if mode != 'history' %}
           <div class="form-group">
             <label for="fileInput">上傳檔案</label>
             <div class="input-group">
               <div class="custom-file" style="padding-left: 100px;padding-right: 100px;">
-                <input type="file" class="custom-file-input" id="fileInput" name="file">
+                <input type="file" class="custom-file-input" id="fileInput" name="file" accept="image/png, image/jpeg, image/jpg">
                 <label class="custom-file-label" for="fileInput" style="text-align: left;">請選擇檔案</label>
               </div>
               <div class="input-group-append">
                 <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
               </div>
             </div>
-
+            {% endif %}
 
 
 
@@ -189,8 +189,12 @@
                 <button onclick="exportData()" class="btn btn-secondary">匯出 JSON</button>
               </div>
               <div class="col-auto">
-                <input type="file" id="importFile" accept="application/json" onchange="importData(event)"
-                  class="form-control-file" />
+                <div class="input-group">
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="importFile" accept="application/json" onchange="importData(event)">
+                    <label class="custom-file-label" for="importFile" style="text-align: left;">匯入 JSON</label>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1111,6 +1115,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
 
+
 // 修改 uploadImage 函數，在成功上傳後儲存 file_id
 async function uploadImage() {
     const fileInput = document.getElementById("fileInput").files[0];
@@ -1118,7 +1123,12 @@ async function uploadImage() {
         alert("請先選擇檔案");
         return;
     }
-
+// ✅ 圖片檔案格式驗證
+    const validTypes = ["image/jpeg", "image/png", "image/jpg"];
+    if (!validTypes.includes(fileInput.type)) {
+        alert("僅接受 JPG 或 PNG 格式的圖片！");
+        return;
+    }
     // 顯示 loading 動畫
     document.getElementById("loading").style.display = "flex";
     
@@ -1219,6 +1229,7 @@ async function uploadImage() {
       }
     });
   }
+  
 </script>
 
 
