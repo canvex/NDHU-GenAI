@@ -359,7 +359,7 @@
     const FILE_ID = {{ file_id if file_id else 'null' }};
 
   // 新增全域變數來儲存當前 file_id
-  let currentFileId = null;
+  let currentFileId = FILE_ID;
 
   // 修改儲存檔案按鈕的功能
   async function saveOCRData() {
@@ -379,8 +379,9 @@
                 width: Math.round(f.width * img.width),
                 height: Math.round(f.height * img.height),
                 id: f.id,
-                center_x: f.x + f.width/2,
-                center_y: f.y + f.height/2
+                center_x: Math.round((f.x + f.width / 2) * img.width),
+                center_y: Math.round((f.y + f.height / 2) * img.height)
+
             })),
             file_id: currentFileId
         };
@@ -1027,15 +1028,24 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // 匯出框選資料
   function exportData() {
-    const absoluteFields = fields.map((f) => ({
-      mode: f.mode, // 修正這裡，確保每個框都有自己的模式
-      name: f.name,
-      x: Math.round(f.x * img.width),
-      y: Math.round(f.y * img.height),
-      width: Math.round(f.width * img.width),
-      height: Math.round(f.height * img.height),
-      id: f.id,
-    }));
+    const absoluteFields = fields.map((f) => {
+      const absX = Math.round(f.x * img.width);
+      const absY = Math.round(f.y * img.height);
+      const absWidth = Math.round(f.width * img.width);
+      const absHeight = Math.round(f.height * img.height);
+
+      return {
+        mode: f.mode, // 確保每個框都有自己的模式
+        name: f.name,
+        x: absX,
+        y: absY,
+        width: absWidth,
+        height: absHeight,
+        id: f.id,
+        center_x: Math.round(absX + absWidth / 2),
+        center_y: Math.round(absY + absHeight / 2),
+      };
+    });
 
     const dataStr =
       "data:text/json;charset=utf-8," +
