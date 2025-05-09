@@ -50,7 +50,7 @@ def detect_answers(image_path: str, output_json: str = 'output/3_matched_result.
         filtered_results.append({
             "id": f"a{answer_idx}",
             "mode": "answer",
-            "name": answer_idx,
+            "name": "", # 目前留空，answer_idx
             "x": pred["x"] - pred["width"] / 2,
             "y": pred["y"] - pred["height"] / 2,
             "width": pred["width"],

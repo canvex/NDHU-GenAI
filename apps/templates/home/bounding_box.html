@@ -117,6 +117,8 @@
         <input type="checkbox" id="mode-toggle" />
         <span id="mode-status">目前是問題模式</span>
       </div>
+      <button onclick="autoFillAnswerBoxes(fields, personalDataMap)">自動填入</button>
+      <button onclick="logCurrentFields()">查看目前框框資料</button>
 
       <!-- <canvas id="myCanvas" width="800" height="600"></canvas> -->
 
@@ -190,6 +192,7 @@
       let isDrawing = false;
       let originalFileName = "result.png"; // 預設下載圖片名稱
       const answerCandidates = []; //存放個人資料，answer右鍵可以填入
+      const personalDataMap = {};  // 新增一個 map，用來 key 對應 value
       // 取得今天日期（格式：2025/04/25）
       const today = new Date();
       const formattedDate = `${today.getFullYear()}/${String(
@@ -198,17 +201,22 @@
 
       // 加入今天日期
       answerCandidates.push(formattedDate);
+      personalDataMap["日期"] = formattedDate;
       // 發送 GET 請求到 Flask API 拿個人資料
       fetch("/api/profile")
         .then((response) => response.json())
         .then((data) => {
-          // 過濾掉 null 或空字串，再展開加入陣列
-          const filteredValues = Object.values(data).filter(
-            (value) => value !== null && value !== ""
-          );
-          answerCandidates.push(...filteredValues);
-          console.log(answerCandidates); // 確認資料已經加入陣列
-        })
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== null && value !== "") {
+            // 原本的陣列：只存值
+            answerCandidates.push(value);
+            // 新增的對照表：key 對應 value
+            personalDataMap[key] = value;
+          }
+    });
+    console.log("右鍵候選答案：", answerCandidates);
+    console.log("問題名稱 → 個資對照：", personalDataMap);
+  })
         .catch((error) => console.error("Error fetching data:", error));
       upload.addEventListener("change", (event) => {
         const file = event.target.files[0];
@@ -473,14 +481,20 @@
               mode === "question"
                 ? `q${questionIdCounter++}`
                 : `a${answerIdCounter++}`;
+            const normX = Math.min(startX, x);
+            const normY = Math.min(startY, y);
+            const normWidth = Math.abs(x - startX);
+            const normHeight = Math.abs(y - startY);
             fields.push({
               id: fieldId,
               mode: mode,
-              name: inputValue, // 根據模式，輸入的是問題或答案
-              x: Math.min(startX, x),
-              y: Math.min(startY, y),
-              width: Math.abs(x - startX),
-              height: Math.abs(y - startY),
+              name: inputValue,
+              x: normX,
+              y: normY,
+              width: normWidth,
+              height: normHeight,
+              center_x: normX + normWidth / 2,
+              center_y: normY + normHeight / 2,
             });
             updateFieldList();
           }
@@ -702,6 +716,11 @@
 
       // 更新欄位列表
       function updateFieldList() {
+        // 每次更新都重新計算中心點
+        fields.forEach((f) => {
+          f.center_x = f.x + f.width / 2;
+          f.center_y = f.y + f.height / 2;
+        });
         const answerList = document.getElementById("answerList");
         questionList.innerHTML = "";
         answerList.innerHTML = "";
@@ -805,16 +824,27 @@
       }
 
       function updateFieldsWithRelativeCoordinates(importedFields) {
-        fields = importedFields.map((f) => ({
+      fields = importedFields.map((f) => {
+        const x = f.x / img.width;
+        const y = f.y / img.height;
+        const width = f.width / img.width;
+        const height = f.height / img.height;
+
+        return {
           ...f,
-          x: f.x / img.width,
-          y: f.y / img.height,
-          width: f.width / img.width,
-          height: f.height / img.height,
-        }));
-        updateFieldList();
-        redrawCanvas();
-      }
+          x,
+          y,
+          width,
+          height,
+          center_x: x + width / 2,
+          center_y: y + height / 2,
+        };
+      });
+
+      updateFieldList();
+      redrawCanvas();
+    }
+
 
       document
         .getElementById("importBtn")
@@ -858,6 +888,10 @@
               try {
                 console.log("調用 handleApiResponse 之前的資料:", data);
                 handleApiResponse(data); // 🔹 呼叫處理函式
+                // 延遲執行以確保 fields 已完成更新
+                setTimeout(() => {
+                  autoFillAnswerBoxes(fields, personalDataMap);
+                }, 0);
                 // document.getElementById("output").textContent = JSON.stringify(
                 //   data,
                 //   null,
@@ -940,6 +974,51 @@
           }
         });
       }
+      function autoFillAnswerBoxes(fields, personalDataMap) {
+        const questionBoxes = fields.filter(f => f.mode === 'question');
+        const answerBoxes = fields.filter(f => f.mode === 'answer');
+
+        const assignedAnswerIds = new Set(); // 已配對的答案框
+
+        questionBoxes.forEach(q => {
+          const value = personalDataMap[q.name];
+          if (!value) return;
+
+          let closestAnswer = null;
+          let minDist = Infinity;
+          let verticalTolerance = 0.05; //容許範圍內（單位為比例）允許上下偏差最多canvas 高度的 5%
+
+          answerBoxes.forEach(a => {
+            if (assignedAnswerIds.has(a.id)) return;
+
+            const isToRight = a.center_x > q.center_x;
+            const verticalOffset = a.center_y - q.center_y;
+
+            // ✅ 容錯：只要答案框在右邊，允許上下差距在容許範圍內（單位為比例）
+            const isWithinVerticalTolerance = verticalOffset >= -verticalTolerance;
+
+            if (!(isToRight && isWithinVerticalTolerance)) return;
+
+            const dist = Math.hypot(q.center_x - a.center_x, q.center_y - a.center_y);
+            if (dist < minDist) {
+              minDist = dist;
+              closestAnswer = a;
+            }
+          });
+
+          if (closestAnswer) {
+            closestAnswer.name = value;
+            assignedAnswerIds.add(closestAnswer.id);
+          }
+        });
+
+        redrawCanvas();
+        return fields;
+      }
+
+      function logCurrentFields() {
+  console.log("目前 fields 資料如下：", fields);
+}
     </script>
   </body>
 </html>

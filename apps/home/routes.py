@@ -175,7 +175,7 @@ def upload_image():
             except Exception as e:
                 return jsonify({'error': f'OCR 處理錯誤: {str(e)}'}), 500
 
-            filterOCR.process_ocr_result()
+            filterOCR.process()
             combineOCR.process_matched_fields()
 
             # # 呼叫 detect_answer 模組
@@ -313,7 +313,7 @@ def doc_select():
         except Exception as e:
             return jsonify({'error': f'OCR 處理錯誤: {str(e)}'}), 500
 
-        filterOCR.process_ocr_result()
+        filterOCR.process()
         combineOCR.process_matched_fields()
 
         try:
@@ -407,7 +407,7 @@ def get_profile():
                 '學歷': profile.education,
                 # 'student_id': profile.student_id,
                 '電話': profile.phone,
-                "身分證號碼": profile.national_id,
+                "身分證字號": profile.national_id,
                 "性別": profile.gender,
                 "生日": profile.birth_date,
                 "手機": profile.mobile,
@@ -462,7 +462,7 @@ def get_single_file(file_id):
 
 @blueprint.route('/file/<int:file_id>')
 @login_required
-def testbounding(file_id):
+def historyFile(file_id):
     return render_template('home/doc_auto_select.html',mode="history", file_id=file_id)
 
 # 取得歷史文件的資料(圖片、)
