@@ -1260,44 +1260,53 @@ async function uploadImage() {
   function autoFillAnswerBoxes(fields, personalDataMap) {
     const questionBoxes = fields.filter(f => f.mode === 'question');
     const answerBoxes = fields.filter(f => f.mode === 'answer');
+    const assignedAnswerIds = new Set();
 
-    const assignedAnswerIds = new Set(); // 已配對的答案框
+    // 動態計算容錯範圍（字體高度的 1.5 倍）
+    const fontSize = 16; // 需根據實際字體大小調整
+    const verticalTolerancePixels = fontSize * 1.5; // 方法1：基於字體
+    
 
     questionBoxes.forEach(q => {
-      const value = personalDataMap[q.name];
-      if (!value) return;
+        const value = personalDataMap[q.name];
+        if (!value) return;
 
-      let closestAnswer = null;
-      let minDist = Infinity;
-      let verticalTolerance = 0.05; //容許範圍內（單位為比例）允許上下偏差最多canvas 高度的 5%
+        let closestAnswer = null;
+        let minDist = Infinity;
 
-      answerBoxes.forEach(a => {
-        if (assignedAnswerIds.has(a.id)) return;
+        answerBoxes.forEach(a => {
+            if (assignedAnswerIds.has(a.id)) return;
 
-        const isToRight = a.center_x > q.center_x;
-        const verticalOffset = a.center_y - q.center_y;
+            const isToRight = a.center_x > q.center_x;
+            
+            // 轉換為像素單位進行比較
+            const verticalOffsetPixels = (a.center_y - q.center_y) * canvas.height;
+            const isWithinTolerance = Math.abs(verticalOffsetPixels) <= verticalTolerancePixels;
 
-        // ✅ 容錯：只要答案框在右邊，允許上下差距在容許範圍內（單位為比例）
-        const isWithinVerticalTolerance = verticalOffset >= -verticalTolerance;
+            if (!(isToRight && isWithinTolerance)) return;
 
-        if (!(isToRight && isWithinVerticalTolerance)) return;
+            // 計算距離（保持比例單位或轉為像素單位均可）
+            let dist = Math.hypot(q.center_x - a.center_x, q.center_y - a.center_y);
 
-        const dist = Math.hypot(q.center_x - a.center_x, q.center_y - a.center_y);
-        if (dist < minDist) {
-          minDist = dist;
-          closestAnswer = a;
+            // 水平對齊優先（Y 軸偏差小於半個字高）
+            const isHorizontalFirst = Math.abs(verticalOffsetPixels) < fontSize / 2;
+            if (isHorizontalFirst) dist *= 0.5;
+
+            if (dist < minDist) {
+                minDist = dist;
+                closestAnswer = a;
+            }
+        });
+
+        if (closestAnswer) {
+            closestAnswer.name = value;
+            assignedAnswerIds.add(closestAnswer.id);
         }
-      });
-
-      if (closestAnswer) {
-        closestAnswer.name = value;
-        assignedAnswerIds.add(closestAnswer.id);
-      }
     });
 
     redrawCanvas();
     return fields;
-  }
+}
   
 </script>
 
