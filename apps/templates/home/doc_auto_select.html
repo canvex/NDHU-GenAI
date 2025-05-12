@@ -161,21 +161,19 @@
       <form id="uploadForm" onsubmit="return false;"
         style="padding-left: 150px;padding-right:150px; text-align:center;">
         <div class="card-body">
-          {% if mode != 'history' %}
-          <div class="form-group">
+          <div class="form-group" {% if mode == 'history' %}hidden{% endif %}>
             <label for="fileInput">上傳檔案</label>
             <div class="input-group">
               <div class="custom-file" style="padding-left: 100px;padding-right: 100px;">
-                <input type="file" class="custom-file-input" id="fileInput" name="file" accept="image/png, image/jpeg, image/jpg">
+                <input type="file" class="custom-file-input" id="fileInput" name="file"
+                      accept="image/png, image/jpeg, image/jpg" {% if mode == 'history' %}disabled{% endif %}>
                 <label class="custom-file-label" for="fileInput" style="text-align: left;">請選擇檔案</label>
               </div>
               <div class="input-group-append">
                 <button type="button" class="input-group-text" onclick="uploadImage()">Upload</button>
               </div>
             </div>
-            {% endif %}
-
-
+          </div>
 
             <br /><br />
             <div class="row justify-content-center" style="gap: 5px; text-align: center;">
