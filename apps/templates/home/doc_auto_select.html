@@ -294,6 +294,16 @@
 
               <div id="editBtn">✏️ 編輯</div>
               <div id="deleteBtn">🗑️ 刪除</div>
+              <li>
+                文字顏色：
+                <div id="colorOptions" style="display: flex; gap: 5px; padding-top: 5px;">
+                <div style="background: black; width: 20px; height: 20px; border-radius: 50%; cursor: pointer;" data-color="black"></div>
+                <div style="background: red; width: 20px; height: 20px; border-radius: 50%; cursor: pointer;" data-color="red"></div>
+                <div style="background: blue; width: 20px; height: 20px; border-radius: 50%; cursor: pointer;" data-color="blue"></div>
+                <div style="background: yellow; width: 20px; height: 20px; border-radius: 50%; cursor: pointer;" data-color="yellow"></div>
+                <div style="background: green; width: 20px; height: 20px; border-radius: 50%; cursor: pointer;" data-color="green"></div>
+                </div>
+              </li>
               <li>自動填入答案：</li>
               <ul id="answerOptions" style="padding-left: 15px"></ul>
             </ul>
@@ -417,18 +427,27 @@
 
   // 等 DOM 載入完成後執行
   window.addEventListener("DOMContentLoaded", () => {
-    const modeToggle = document.getElementById("mode-toggle");
-    const modeStatus = document.getElementById("mode-status");
+  const modeToggle = document.getElementById("mode-toggle");
+  const modeStatus = document.getElementById("mode-status");
 
-    // 監聽切換事件
-    modeToggle.addEventListener("change", () => {
-      isAnswerMode = modeToggle.checked;
+  // 監聽模式切換
+  modeToggle.addEventListener("change", () => {
+    isAnswerMode = modeToggle.checked;
+    modeStatus.textContent = isAnswerMode ? "目前是答案模式" : "目前是問題模式";
+  });
 
-      modeStatus.textContent = isAnswerMode
-        ? "目前是答案模式"
-        : "目前是問題模式";
+  // 🔶 這裡加入顏色點擊事件監聽
+  document.querySelectorAll("#colorOptions div").forEach(colorDiv => {
+  colorDiv.addEventListener("click", () => {
+    const color = colorDiv.dataset.color;
+    if (selectedField && selectedField.mode === "answer") {
+      selectedField.textColor = color;
+      redrawCanvas();
+      contextMenu.style.display = "none";
+    }
     });
   });
+});
 
 
   const upload = document.getElementById("fileInput");
@@ -782,6 +801,7 @@ document.addEventListener("DOMContentLoaded", () => {
           height: normHeight,
           center_x: normX + normWidth / 2,
           center_y: normY + normHeight / 2,
+          textColor: "black" // 預設黑色
         });
         updateFieldList();
       }
@@ -944,6 +964,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 顯示 question（在框框上方）
         if (f.mode === "question") {
+          // 問題文字保持紅色不變
           ctx.fillStyle = "red";
           ctx.font = "bold 14px Arial";
           ctx.fillText(
@@ -955,7 +976,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 顯示 answer（在框框內）
         if (f.mode === "answer") {
-          ctx.fillStyle = "black";
+          // 修改這裡：使用框選區域的 textColor 屬性，預設為黑色
+          ctx.fillStyle = f.textColor || "black"; // 新增：支援自訂文字顏色
           ctx.font = "22px Arial";
           ctx.fillText(
             f.name,
@@ -965,7 +987,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // 畫出四個角落的圓點（方便拖曳）
-
         const cornerSize = 5;
         ctx.fillStyle = "blue";
         const corners = [
@@ -988,7 +1009,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         // 只畫 answer 的文字，不畫框、不畫 question、不畫角點
         if (f.mode === "answer") {
-          ctx.fillStyle = "black";
+          // 修改這裡：同樣使用 textColor 屬性
+          ctx.fillStyle = f.textColor || "black"; // 新增：支援自訂文字顏色
           ctx.font = "22px Arial";
           ctx.fillText(
             f.name,
@@ -998,7 +1020,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     });
-  }
+}
 
   // 更新欄位列表
   function updateFieldList() {
@@ -1063,6 +1085,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: f.id,
         center_x: Math.round(absX + absWidth / 2),
         center_y: Math.round(absY + absHeight / 2),
+        textColor: f.textColor || "black" // 確保匯出時包含顏色設定
       };
     });
 

@@ -121,14 +121,22 @@ def profile_edit():
 def bounding():
     return render_template('home/bounding_box.html', mode="first_upload", file_id=None)
 
-
 # 允許的文件類型
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
-
 def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    if not filename:
+        return False
+    
+    # 使用 os.path.splitext 更安全的獲取擴展名
+    _, ext = os.path.splitext(filename)
+    
+    # 檢查擴展名是否存在且合法
+    if not ext:
+        return False
+    
+    # 去掉點號並轉為小寫比較
+    return ext[1:].lower() in ALLOWED_EXTENSIONS
 
 
 @blueprint.route('/upload', methods=['POST'])
@@ -267,8 +275,23 @@ def doc_select():
     file = request.files['file']  # 只有在檔案上傳時才會賦值
     if file.filename == '':
         return jsonify({'error': '未選擇檔案'}), 400
+
+    # 檢查文件類型
     if not allowed_file(file.filename):
-        return jsonify({'error': 'File type not allowed'}), 400
+        return jsonify({'error': '不允許的文件類型，僅支持png、jpg、jpeg格式'}), 400
+
+    # 檢查文件名是否全中文（不包含英文或數字）
+    def is_all_chinese(filename):
+        # 移除文件擴展名
+        name_part = os.path.splitext(filename)[0]
+        # 檢查每個字符是否都是中文字符
+        for char in name_part:
+            if not '\u4e00' <= char <= '\u9fff':
+             return False
+        return True
+
+    if is_all_chinese(os.path.splitext(file.filename)[0]):
+        return jsonify({'error': '檔名不能為全中文，請包含英文或數字'}), 400
 
     try:
         # === 檔案處理 ===
@@ -358,12 +381,9 @@ def doc_fill():
     if request.method == 'POST':
         some_input = request.form.get('some_input')
         return redirect(url_for('home/blueprint.doc_download'))  # 确保正确的路由
-
     return render_template('home/doc_fill.html')
 
 # 文件下載
-
-
 @blueprint.route('/doc_download', methods=['GET', 'POST'])
 def doc_download():
     if request.method == 'POST':
