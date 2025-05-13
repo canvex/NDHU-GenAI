@@ -321,34 +321,9 @@
               <h3>回答 (Answers)</h3>
               <ul id="answerList"></ul>
             </div>
-
-
-
-
-
-
-            <!-- /.card-body -->
-
-
-            <!-- <a href="{{ url_for('home_blueprint.doc_fill') }}" class="btn btn-primary float-sm-right">
-            確認
-          </a> -->
-
           </div>
       </form>
-
-
-
     </div>
-    <!-- /.card -->
-
-    <!-- Form Element sizes -->
-
-
-
-    <!-- Input addon -->
-
-    <!--/.col (right) -->
 </div>
 <!-- /.row -->
 </div><!-- /.container-fluid -->
@@ -488,6 +463,7 @@
             personalDataMap[key] = value;
           }
     });
+    answerCandidates.push("✓");  // ✅ 手動加入「✓」
     console.log("右鍵候選答案：", answerCandidates);
     console.log("問題名稱 → 個資對照：", personalDataMap);
   })
@@ -976,15 +952,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 顯示 answer（在框框內）
         if (f.mode === "answer") {
-          // 修改這裡：使用框選區域的 textColor 屬性，預設為黑色
-          ctx.fillStyle = f.textColor || "black"; // 新增：支援自訂文字顏色
-          ctx.font = "22px Arial";
-          ctx.fillText(
-            f.name,
-            x + 5, // 稍微往右一點
-            y + 30 // 稍微往下，避免太靠邊
-          );
+          let fontSize = Math.floor(h * 0.7);
+          fontSize = Math.max(6, Math.min(fontSize, 108));
+
+          ctx.fillStyle = f.textColor || "black";
+          ctx.font = `${fontSize}px Arial`;
+          ctx.fillText(f.name, x + 5, y + fontSize);
         }
+
 
         // 畫出四個角落的圓點（方便拖曳）
         const cornerSize = 5;
@@ -1007,19 +982,21 @@ document.addEventListener("DOMContentLoaded", () => {
           ctx.fill();
         });
       } else {
-        // 只畫 answer 的文字，不畫框、不畫 question、不畫角點
         if (f.mode === "answer") {
-          // 修改這裡：同樣使用 textColor 屬性
-          ctx.fillStyle = f.textColor || "black"; // 新增：支援自訂文字顏色
-          ctx.font = "22px Arial";
-          ctx.fillText(
-            f.name,
-            f.x * canvas.width + 5,
-            f.y * canvas.height + 30
-          );
+          const x = f.x * canvas.width;
+          const y = f.y * canvas.height;
+          const w = f.width * canvas.width;
+          const h = f.height * canvas.height;
+
+          let fontSize = Math.floor(h * 0.7);
+          fontSize = Math.max(6, Math.min(fontSize, 108));
+
+          ctx.fillStyle = f.textColor || "black";
+          ctx.font = `${fontSize}px Arial`;
+          ctx.fillText(f.name, x + 5, y + fontSize);
         }
       }
-    });
+  });
 }
 
   // 更新欄位列表
