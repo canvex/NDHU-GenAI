@@ -480,36 +480,6 @@
     }
   });
 
-//   img.onload = function () {
-//   // 原始圖片尺寸
-//   const originalWidth = img.naturalWidth;
-//   const originalHeight = img.naturalHeight;
-
-//   // 設定畫布固定寬度（解析度用來畫圖，與 CSS 分開）
-//   const fixedCanvasWidth = 1000;
-//   const scale = fixedCanvasWidth / originalWidth;
-//   const fixedCanvasHeight = originalHeight * scale;
-
-//   // 設定 canvas 實際解析度（像素大小）
-//   canvas.width = fixedCanvasWidth;
-//   canvas.height = fixedCanvasHeight;
-
-//   // 設定 CSS RWD 樣式
-//   canvas.style.width = "100%";
-//   canvas.style.maxWidth = "1000px";
-//   canvas.style.height = "auto";
-//   canvas.style.display = "block";
-//   canvas.style.margin = "0 auto";  // 水平置中
-
-//   // 使用 setTransform 自動縮放圖像與所有畫圖操作
-//   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-//   ctx.clearRect(0, 0, originalWidth, originalHeight);
-//   ctx.drawImage(img, 0, 0);
-
-//   // 重新繪製框線等
-//   redrawCanvas();
-// };
-
 
 //讀取圖片，從資料庫或是本機上傳
 document.addEventListener("DOMContentLoaded", () => {
@@ -541,7 +511,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const originalWidth = img.naturalWidth;
                 const originalHeight = img.naturalHeight;
 
-                const maxWidth = window.innerWidth * 0.7;
+                const maxWidth = window.innerWidth * 0.5;
                 const imgScale = maxWidth / originalWidth; // 計算縮放比例
 
                 // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
@@ -574,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const originalWidth = img.naturalWidth;
         const originalHeight = img.naturalHeight;
 
-        const maxWidth = window.innerWidth * 0.7;
+        const maxWidth = window.innerWidth * 0.5;
         const imgScale = maxWidth / originalWidth; // 計算縮放比例
 
         // 設定 canvas 的實際解析度（不要改變 canvas 的像素解析度）
@@ -952,7 +922,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 顯示 answer（在框框內）
         if (f.mode === "answer") {
-          let fontSize = Math.floor(h * 0.7);
+          let fontSize = Math.floor(h * 0.5);
           fontSize = Math.max(6, Math.min(fontSize, 108));
 
           ctx.fillStyle = f.textColor || "black";
@@ -988,7 +958,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const w = f.width * canvas.width;
           const h = f.height * canvas.height;
 
-          let fontSize = Math.floor(h * 0.7);
+          let fontSize = Math.floor(h * 0.5);
           fontSize = Math.max(6, Math.min(fontSize, 108));
 
           ctx.fillStyle = f.textColor || "black";
@@ -1260,51 +1230,77 @@ async function uploadImage() {
     const answerBoxes = fields.filter(f => f.mode === 'answer');
     const assignedAnswerIds = new Set();
 
-    // 動態計算容錯範圍（字體高度的 1.5 倍）
-    const fontSize = 16; // 需根據實際字體大小調整
-    const verticalTolerancePixels = fontSize * 1.5; // 方法1：基於字體
-    
+    const fontSize = 16;
+    const verticalTolerancePixels = fontSize * 1.5;
+    const horizontalTolerancePixels = fontSize * 16;
 
-    questionBoxes.forEach(q => {
-        const value = personalDataMap[q.name];
-        if (!value) return;
-
-        let closestAnswer = null;
+    function findBestMatch(q, direction = "horizontal") {
+        let best = null;
         let minDist = Infinity;
 
         answerBoxes.forEach(a => {
             if (assignedAnswerIds.has(a.id)) return;
 
-            const isToRight = a.center_x > q.center_x;
-            
-            // 轉換為像素單位進行比較
-            const verticalOffsetPixels = (a.center_y - q.center_y) * canvas.height;
-            const isWithinTolerance = Math.abs(verticalOffsetPixels) <= verticalTolerancePixels;
+            const dx = (a.center_x - q.center_x) * canvas.width;
+            const dy = (a.center_y - q.center_y) * canvas.height;
 
-            if (!(isToRight && isWithinTolerance)) return;
+            const isHorizontal = direction === "horizontal";
+            const isToRight = dx > 0;
+            const isBelow = dy > 0;
 
-            // 計算距離（保持比例單位或轉為像素單位均可）
-            let dist = Math.hypot(q.center_x - a.center_x, q.center_y - a.center_y);
+            const verticalAligned = Math.abs(dy) <= verticalTolerancePixels;
+            const horizontalAligned = Math.abs(dx) <= horizontalTolerancePixels;
 
-            // 水平對齊優先（Y 軸偏差小於半個字高）
-            const isHorizontalFirst = Math.abs(verticalOffsetPixels) < fontSize / 2;
-            if (isHorizontalFirst) dist *= 0.5;
+            let isCandidate = false;
+
+            if (isHorizontal && isToRight && verticalAligned) {
+                isCandidate = true;
+            } else if (!isHorizontal && isBelow && horizontalAligned) {
+                isCandidate = true;
+            }
+
+            if (!isCandidate) return;
+
+            let dist = Math.hypot(dx, dy);
+
+            // 強化水平對齊（對於橫向）、或垂直對齊（對於直向）
+            const alignedBonus = isHorizontal
+              ? Math.abs(dy) < fontSize / 2
+              : Math.abs(dx) < fontSize / 2;
+
+            if (alignedBonus) dist *= 0.5;
 
             if (dist < minDist) {
                 minDist = dist;
-                closestAnswer = a;
+                best = a;
             }
         });
 
-        if (closestAnswer) {
-            closestAnswer.name = value;
-            assignedAnswerIds.add(closestAnswer.id);
+        return best;
+    }
+
+    questionBoxes.forEach(q => {
+        const value = personalDataMap[q.name];
+        if (!value) return;
+
+        // ✅ 先嘗試水平右側匹配
+        let match = findBestMatch(q, "horizontal");
+
+        // ❌ 若沒找到 → 再垂直向下匹配
+        if (!match) {
+            match = findBestMatch(q, "vertical");
+        }
+
+        if (match) {
+            match.name = value;
+            assignedAnswerIds.add(match.id);
         }
     });
 
     redrawCanvas();
     return fields;
 }
+
   
 </script>
 
