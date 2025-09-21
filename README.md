@@ -1,70 +1,56 @@
 # NDHU-GenAI 東華專題
 
-### 1️⃣ 建立虛擬環境(Linux/Mac)
+### 1️⃣建立虛擬環境(Linux/Mac)
 
 ```
 python3 -m venv venv
 ```
 
-### 1️⃣ 建立虛擬環境(Windows)
+### 1️⃣建立虛擬環境(Windows)
 
 ```
 python -m venv venv
 ```
 
-### 2️⃣ 啟動虛擬環境(Linux/Mac)
+### 2️⃣啟動虛擬環境(Linux/Mac)
 
 ```
 source venv/bin/activate
 ```
 
-### 2️⃣ 啟動虛擬環境(Windows)
+### 2️⃣啟動虛擬環境(Windows)
 
 ```
 venv\Scripts\activate
 ```
 
-### 3️⃣ 安裝所有套件
+### 3️⃣安裝所有套件
 
 ```
 pip install -r requirements.txt
 ```
-
-### 4️⃣ 設定 Flask 主程式、開發模式 (Linux/Mac)
+### 4️⃣設定 Flask 主程式、開發模式 (Linux/Mac)
 
 ```
 export FLASK_APP=run.py
 export FLASK_ENV=development
 ```
-
-### 4️⃣ 設定 Flask 主程式、開發模式 (Windows)
+### 4️⃣設定 Flask 主程式、開發模式 (Windows)
 
 ```
 set FLASK_APP=run.py
 set FLASK_ENV=development
 ```
-
-### 5️⃣ 啟動 Flask 伺服器
+### 5️⃣啟動 Flask 伺服器
 
 ```
 flask run
 ```
-
 ```
 python run.py
 ```
-
 ---
-
 ### 創建 `.env` 檔案
 
 在專案的根目錄建立一個名為 `.env` 的檔案。此檔案將用來存放你的資料庫連線設定。<br>
-在 `.env` 檔案中，加入以下設定：
-
-```
-DATABASE_URL=mysql+pymysql://...
-OCR_SPACE_API_KEY=K839....
-OPENAI_API_KEY=sk-proj-P....
-ROBOFLOW_API_KEY=h...
-AES_SECRET_KEY=N9z...
-```
+在 `.env` 檔案中，加入以下設定：`DATABASE_URL=mysql+pymysql://...`
