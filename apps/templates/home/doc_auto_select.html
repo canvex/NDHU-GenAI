@@ -189,8 +189,7 @@
               <div class="col-auto">
                 <div class="input-group">
                   <div class="custom-file">
-                    <input type="file" class="custom-file-input" id="importFile" accept="application/json" onchange="importData(event)">
-                    <label class="custom-file-label" for="importFile" style="text-align: left;">匯入 JSON</label>
+                
                   </div>
                 </div>
               </div>
@@ -1101,10 +1100,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document
-    .getElementById("importBtn")
+    .getElementById("importFile")
     .addEventListener("change", importData, false);
   document
-    .getElementById("exportBtn")
+    .getElementById("exportFile")
     .addEventListener("click", exportData, false);
 
 // 修改 uploadImage 函數，在成功上傳後儲存 file_id
@@ -1174,10 +1173,32 @@ async function uploadImage() {
 
     questionIdCounter = 0;
     answerIdCounter = 0;
+    
     if (data.ocr_data && img.complete) {
-      updateFieldsWithRelativeCoordinates(data.ocr_data);
-      updateIdCountersFromFields(data.ocr_data); // ✅ 加這行
-    } else {
+  updateFieldsWithRelativeCoordinates(data.ocr_data);
+  updateIdCountersFromFields(data.ocr_data);
+
+  // 🔹 補上：自動為每個 question 建立一個 answer 框
+  const answerOffset = 0.05; // 答案框右移一點點（比例）
+  data.ocr_data.forEach((q) => {
+    if (q.mode === "question") {
+      fields.push({
+        id: `a${answerIdCounter++}`,
+        mode: "answer",
+        name: "",
+        x: q.x + q.width + answerOffset, // 在右邊生成
+        y: q.y,
+        width: q.width,
+        height: q.height,
+        center_x: q.x + q.width + q.width / 2 + answerOffset,
+        center_y: q.y + q.height / 2,
+        textColor: "black",
+      });
+    }
+  });
+
+  redrawCanvas();
+} else {
       img.onload = () => {
         updateFieldsWithRelativeCoordinates(data.ocr_data);
         updateIdCountersFromFields(data.ocr_data); // ✅ 加這行
@@ -1263,10 +1284,9 @@ async function uploadImage() {
 
             let dist = Math.hypot(dx, dy);
 
-            // 強化水平對齊（對於橫向）、或垂直對齊（對於直向）
             const alignedBonus = isHorizontal
-              ? Math.abs(dy) < fontSize / 2
-              : Math.abs(dx) < fontSize / 2;
+                ? Math.abs(dy) < fontSize / 2
+                : Math.abs(dx) < fontSize / 2;
 
             if (alignedBonus) dist *= 0.5;
 
@@ -1279,26 +1299,33 @@ async function uploadImage() {
         return best;
     }
 
+    // === 核心修改處 ===
     questionBoxes.forEach(q => {
-        const value = personalDataMap[q.name];
-        if (!value) return;
+        // 以 question 名稱找對應個資（用 key 模糊匹配）
+        let matchedValue = null;
+        Object.entries(personalDataMap).forEach(([key, value]) => {
+            const lowerKey = key.toLowerCase();
+            const lowerQName = q.name.toLowerCase();
+            if (lowerQName.includes(lowerKey) || lowerKey.includes(lowerQName)) {
+                matchedValue = value;
+            }
+        });
 
-        // ✅ 先嘗試水平右側匹配
+        if (!matchedValue) return; // 沒對到則跳過
+
+        // 找對應的 answer 框
         let match = findBestMatch(q, "horizontal");
-
-        // ❌ 若沒找到 → 再垂直向下匹配
-        if (!match) {
-            match = findBestMatch(q, "vertical");
-        }
+        if (!match) match = findBestMatch(q, "vertical");
 
         if (match) {
-            match.name = value;
+            match.name = matchedValue;      // ✅ 寫入答案文字
+            match.textColor = "blue";       // ✅ 標記為自動填寫
             assignedAnswerIds.add(match.id);
         }
     });
 
     redrawCanvas();
-    return fields;
+    console.log("✅ 自動填寫個資完成");
 }
 
   

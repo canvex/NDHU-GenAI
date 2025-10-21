@@ -1,9 +1,9 @@
 {% extends "layouts/base.html" %}
 
-{% block title %} Forms General {% endblock %} 
+{% block title %} Forms General {% endblock %}
 
 <!-- Element injected in the BODY element -->
-{% block body_class %} sidebar-mini {% endblock body_class %} 
+{% block body_class %} sidebar-mini {% endblock body_class %}
 
 <!-- Specific Page CSS goes HERE  -->
 {% block stylesheets %}
@@ -92,7 +92,7 @@
   }
 </style>
 
-{% block content %}    
+{% block content %}
 
   <div class="content-wrapper">
     <!-- Content Header (Page header) -->
@@ -198,19 +198,19 @@
   <script>
     
     async function uploadImage() {
-    const fileInput = document.getElementById('fileInput');
+    const fileInput = document.getElementById("fileInput");
     const file = fileInput.files[0];
 
     if (!file) {
-      alert('請先選擇檔案');
+      alert("請先選擇檔案");
       return;
     }
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     try {
-      const response = await fetch("/doc_select", {
+      const response = await fetch("/upload", {
         method: "POST",
         body: formData
       });
@@ -218,14 +218,14 @@
       const data = await response.json();
 
       if (data.success) {
-        alert('✅ 上傳成功：' + data.file_name);
+        alert("✅ 上傳成功：" + data.file_name);
       } else {
-        alert('❌ 上傳失敗：' + (data.error || '未知錯誤'));
+        alert("❌ 上傳失敗：" + (data.error || "未知錯誤"));
       }
 
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('⚠️ 發生錯誤，請稍後再試');
+      console.error("Upload error:", error);
+      alert("⚠️ 發生錯誤，請稍後再試");
     }
   }
     
@@ -666,6 +666,57 @@
       .getElementById("exportBtn")
       .addEventListener("click", exportData, false);
 
+    // 此處為原本的 uploadImage 函式
+    // function uploadImage() {
+    //   let fileInput = document.getElementById("fileInput").files[0];
+    //   if (!fileInput) {
+    //     alert("請選擇圖片");
+    //     return;
+    //   }
+
+    //   let formData = new FormData();
+    //   formData.append("file", fileInput);
+
+    //   // 顯示 loading 動畫
+    //   document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
+    //   document.getElementById("output").textContent = ""; // 清空之前的結果
+
+    //   fetch("/doc_select", {
+    //     method: "POST",
+    //     body: formData,
+    //   })
+    //     .then((response) => response.json())
+    //     .then((data) => {
+    //       // 隱藏 loading 動畫
+    //       document.getElementById("loading").style.display = "none";
+
+    //       // 檢查是否有錯誤訊息
+    //       if (data.error) {
+    //         alert("錯誤: " + data.error); // 顯示錯誤訊息
+    //       } else {
+    //         try {
+    //           console.log("調用 handleApiResponse 之前的資料:", data);
+    //           handleApiResponse(data); // 🔹 呼叫處理函式
+    //           // document.getElementById("output").textContent = JSON.stringify(
+    //           //   data,
+    //           //   null,
+    //           //   2
+    //           // ); // 顯示 JSON 結果
+    //         } catch (error) {
+    //           console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
+    //           alert("處理回應時發生錯誤，請查看 Console 訊息！");
+    //         }
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       console.error("錯誤:", error);
+    //       // 隱藏 loading 動畫
+    //       document.getElementById("loading").style.display = "none";
+    //       alert("上傳失敗，請稍後再試！");
+    //     });
+    // }
+
+    // 新的 uploadImage 函式，用於呼叫 /upload 路由
     function uploadImage() {
       let fileInput = document.getElementById("fileInput").files[0];
       if (!fileInput) {
@@ -676,46 +727,60 @@
       let formData = new FormData();
       formData.append("file", fileInput);
 
-      // 顯示 loading 動畫
-      document.getElementById("loading").style.display = "flex"; // 顯示 loading 動畫
-      document.getElementById("output").textContent = ""; // 清空之前的結果
+      document.getElementById("loading").style.display = "flex";
+      document.getElementById("output").textContent = "";
 
-      fetch("/doc_select", {
+      fetch("/upload", {
         method: "POST",
         body: formData,
       })
         .then((response) => response.json())
         .then((data) => {
-          // 隱藏 loading 動畫
           document.getElementById("loading").style.display = "none";
-
-          // 檢查是否有錯誤訊息
           if (data.error) {
-            alert("錯誤: " + data.error); // 顯示錯誤訊息
+            alert("錯誤: " + data.error);
           } else {
             try {
               console.log("調用 handleApiResponse 之前的資料:", data);
-              handleApiResponse(data); // 🔹 呼叫處理函式
-              // document.getElementById("output").textContent = JSON.stringify(
-              //   data,
-              //   null,
-              //   2
-              // ); // 顯示 JSON 結果
+              handleApiResponse(data);
             } catch (error) {
-              console.error("處理 API 回應時發生錯誤:", error); // 🔴 記錄錯誤
+              console.error("處理 API 回應時發生錯誤:", error);
               alert("處理回應時發生錯誤，請查看 Console 訊息！");
             }
           }
         })
         .catch((error) => {
           console.error("錯誤:", error);
-          // 隱藏 loading 動畫
           document.getElementById("loading").style.display = "none";
           alert("上傳失敗，請稍後再試！");
         });
     }
+
     function handleApiResponse(data) {
       console.log("🔹 API 回應:", data);
+
+      // 新增自動填寫表單欄位的函式
+      function autoFillFormFields(userProfile) {
+        const fieldMap = {
+          "姓名": userProfile.name,
+          "性別": userProfile.gender,
+          "生日": userProfile.birth_date,
+          "身分證字號": userProfile.national_id,
+          "電話": userProfile.phone,
+          "手機": userProfile.mobile,
+          "地址": userProfile.address,
+          "學歷": userProfile.education,
+          "電子郵件": userProfile.email
+        };
+
+        fields.forEach(field => {
+          if (field.mode === "content" && fieldMap[field.name]) {
+            field.name = fieldMap[field.name]; // 直接更新內容模式的欄位名稱為用戶資料
+          }
+        });
+        updateFieldList();
+        redrawCanvas();
+      }
 
       if (data.error) {
         alert("❌ 錯誤：" + data.error);
@@ -726,6 +791,12 @@
         updateFieldsWithRelativeCoordinates(data.ocr_data);
       } else {
         img.onload = () => updateFieldsWithRelativeCoordinates(data.ocr_data);
+      }
+
+      if (data.user_profile) {
+        console.log("🔹 收到使用者個人資料:", data.user_profile);
+        // 自動填寫表單欄位
+        autoFillFormFields(data.user_profile);
       }
     }
   </script>

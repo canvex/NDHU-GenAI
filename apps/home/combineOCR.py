@@ -52,7 +52,7 @@ def merge_bounding_boxes(line):
     }
 
 
-def process_matched_fields(ocr_file="output/2_5_merged_paragraphs.json", gpt_file="output/0_gpt.json", output_file="output/3_matched_result.json"):
+def process_matched_fields(ocr_file="output/2_5_merged_paragraphs.json", gpt_file="output/0_gemini.json", output_file="output/3_matched_result.json"):
     # 確保 output 資料夾存在
     output_folder = os.path.dirname(output_file)
     if not os.path.exists(output_folder):
